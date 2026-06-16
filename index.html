@@ -417,7 +417,7 @@ const SCRIPT_ID = '1IQ4lgm2ddNbx4lFYRcAsu9eugq6_LhrwuY7fCiNYVr4';
 
         function carregarDadosNuvem() {
             // Usa a API pública de planilhas do Google (Leitura instantânea sem bloqueios)
-            const urlLeitura = `https://docs.google.com/spreadsheets/d/${SCRIPT_ID}/gviz/tq?tqx=out:json&sheet=Terça`;
+            const urlLeitura = `https://docs.google.com/spreadsheets/d/${SCRIPT_ID}/gviz/tq?tqx=out:json`;
 
             fetch(urlLeitura)
             .then(res => res.text())
