@@ -1,362 +1,7 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ju Monitor - Calendário Bulking</title>
-    <style>
-        :root {
-            --bg-color: #ffffff;
-            --card-bg: #fdfbfd;
-            --card-empty: #f5f2f4;
-            --primary: #ff66a3;
-            --primary-light: #ffb3d1;
-            --text: #2d1f27;
-            --text-support: #705362;
-            --border-color: #f0e6ec;
-            --accent-blue: #5bc0de;
-            --accent-orange: #f0ad4e;
-        }
-        body {
-            font-family: '-apple-system', BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: #f7f4f6;
-            color: var(--text);
-            margin: 0;
-            padding: 15px;
-            display: flex;
-            justify-content: center;
-        }
-        .container {
-            width: 100%;
-            max-width: 450px;
-            background: var(--bg-color);
-            border-radius: 30px;
-            padding: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-            box-sizing: border-box;
-        }
-        header {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            margin-bottom: 5px;
-        }
-        .avatar-moderno {
-            width: 65px;
-            height: 65px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #ffe6f0 0%, #ffb3d1 100%);
-            border: 2px solid var(--primary);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 15px rgba(255, 102, 163, 0.2);
-        }
-        .avatar-moderno svg {
-            width: 38px;
-            height: 38px;
-            fill: var(--primary);
-        }
-        header h1 {
-            font-size: 22px;
-            margin: 0;
-            color: var(--text);
-            font-weight: 700;
-            letter-spacing: -0.5px;
-        }
-        .subtitle {
-            text-align: center;
-            font-size: 13px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--text-support);
-            font-weight: bold;
-            margin-bottom: 15px;
-        }
-        .calendar-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            margin-bottom: 25px;
-        }
-        .day-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 18px;
-            padding: 15px;
-            box-shadow: 0 4px 12px rgba(225, 213, 220, 0.2);
-        }
-        .day-card.active-day {
-            border: 2px solid var(--primary);
-        }
-        .day-card.empty {
-            background: var(--card-empty);
-            border-color: transparent;
-            opacity: 0.6;
-        }
-        .day-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 6px;
-        }
-        .day-title {
-            font-weight: bold;
-            font-size: 15px;
-            color: var(--text);
-        }
-        .day-badge {
-            background: var(--primary);
-            color: #fff;
-            font-size: 10px;
-            padding: 3px 8px;
-            border-radius: 10px;
-            font-weight: bold;
-        }
-        .macro-row {
-            margin-bottom: 8px;
-        }
-        .macro-info {
-            display: flex;
-            justify-content: space-between;
-            font-size: 12px;
-            margin-bottom: 3px;
-            font-weight: 500;
-        }
-        .bar-bg {
-            background: #eeeaf0;
-            border-radius: 6px;
-            height: 8px;
-            overflow: hidden;
-        }
-        .bar-fill {
-            height: 100%;
-            border-radius: 6px;
-            width: 0%;
-            transition: width 0.4s ease;
-        }
-        .fill-prot { background: var(--primary); }
-        .fill-cal { background: var(--accent-orange); }
-        .fill-water { background: var(--accent-blue); }
-        
-        .meal-list {
-            margin-top: 10px;
-            font-size: 11px;
-            color: var(--text-support);
-            background: #fff;
-            padding: 8px;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-        }
-        .meal-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 5px 0;
-            border-bottom: 1px dotted #f3f0f2;
-        }
-        .meal-item:last-child { border: none; }
-
-        .form-upload {
-            background: #fff;
-            border: 1px solid var(--primary-light);
-            border-radius: 18px;
-            padding: 15px;
-            margin-top: -5px;
-            margin-bottom: 20px;
-            box-shadow: 0 6px 15px rgba(255, 102, 163, 0.05);
-        }
-        .form-upload h3 {
-            margin-top: 0;
-            margin-bottom: 12px;
-            font-size: 14px;
-            color: var(--primary);
-        }
-        .input-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-        .input-group {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-        .input-group label {
-            font-size: 11px;
-            color: var(--text-support);
-            font-weight: 600;
-        }
-        .input-group input, .input-group select {
-            padding: 8px;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            font-size: 12px;
-            background: #faf8fa;
-            color: var(--text);
-            box-sizing: border-box;
-        }
-        .btn-submit {
-            background: var(--primary);
-            color: #fff;
-            border: none;
-            width: 100%;
-            padding: 10px;
-            border-radius: 10px;
-            font-weight: bold;
-            font-size: 13px;
-            cursor: pointer;
-            margin-top: 5px;
-        }
-        .btn-pdf {
-            background: #fff;
-            color: var(--primary);
-            border: 2px solid var(--primary);
-            width: 100%;
-            padding: 10px;
-            border-radius: 14px;
-            font-weight: bold;
-            font-size: 13px;
-            cursor: pointer;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-        #status-nuvem {
-            text-align: center;
-            font-size: 11px;
-            color: var(--accent-blue);
-            margin-bottom: 10px;
-            font-weight: bold;
-        }
-        @media print {
-            body { background: #fff; padding: 0; }
-            .container { box-shadow: none; max-width: 100%; width: 100%; padding: 0; }
-            .form-upload, .btn-pdf, .day-card.empty, .avatar-moderno, #status-nuvem { display: none !important; }
-            .day-card { page-break-inside: avoid; border: 1px solid #ccc !important; margin-bottom: 20px; }
-        }
-    </style>
-</head>
-<body>
-
-    <div class="container">
-        <header>
-            <div class="avatar-moderno">
-                <svg viewBox="0 0 24 24">
-                    <path d="M12,2A3,3 0 0,1 15,5A3,3 0 0,1 12,8A3,3 0 0,1 9,5A3,3 0 0,1 12,2M11,22V15H8V11C8,9.9 8.9,9 10,9H14C15.1,9 16,9.9 16,11V15H13V22H11M6,12V9H4V12A2,2 0 0,0 6,14V12M18,12V14A2,2 0 0,0 20,12V9H18V12Z" />
-                </svg>
-            </div>
-            <h1>Ju Monitor</h1>
-        </header>
-        <div class="subtitle">Semana 01: Bulking 🌸</div>
-        
-        <div id="status-nuvem">🔄 Sincronizando com o Google Sheets...</div>
-
-        <button class="btn-pdf" onclick="window.print()">
-            📄 Exportar Relatório Diário (PDF)
-        </button>
-
-        <div class="calendar-grid">
-            
-            <!-- DIA 01: SEGUNDA (CONCLUÍDO ESTÁTICO) -->
-            <div class="day-card">
-                <div class="day-header">
-                    <span class="day-title">Segunda (Dia 01)</span>
-                    <span class="day-badge">CONCLUÍDO</span>
-                </div>
-                <div class="macro-row">
-                    <div class="macro-info"><span>Proteína</span><span>89g / 138g (64%)</span></div>
-                    <div class="bar-bg"><div class="bar-fill fill-prot" style="width: 64%;"></div></div>
-                </div>
-                <div class="macro-row">
-                    <div class="macro-info"><span>Calorias</span><span>1640 kcal / 2200 kcal (74%)</span></div>
-                    <div class="bar-bg"><div class="bar-fill fill-cal" style="width: 74%;"></div></div>
-                </div>
-                <div class="macro-row">
-                    <div class="macro-info"><span>Água</span><span>1.5L / 3.0L (50%)</span></div>
-                    <div class="bar-bg"><div class="bar-fill fill-water" style="width: 50%;"></div></div>
-                </div>
-                <div class="meal-list">
-                    <div class="meal-item"><span><b>Café + Manhã:</b></span><span>19g Prot | 480 kcal</span></div>
-                    <div class="meal-item"><span><b>Almoço:</b></span><span>36g Prot | 690 kcal</span></div>
-                    <div class="meal-item"><span><b>Lanches + Janta:</b></span><span>34g Prot | 470 kcal</span></div>
-                </div>
-            </div>
-
-            <!-- DIA 02: TERÇA (CONECTADO NA NUVEM) -->
-            <div class="day-card active-day" id="terca-card">
-                <div class="day-header">
-                    <span class="day-title">Terça (Dia 02)</span>
-                    <span class="day-badge" style="background: #5cb85c;">HOJE</span>
-                </div>
-                <div class="macro-row">
-                    <div class="macro-info"><span>Proteína</span><span id="label-prot-terca">0g / 138g (0%)</span></div>
-                    <div class="bar-bg"><div id="bar-prot-terca" class="bar-fill fill-prot" style="width: 0%;"></div></div>
-                </div>
-                <div class="macro-row">
-                    <div class="macro-info"><span>Calorias</span><span id="label-cal-terca">0 kcal / 2200 kcal (0%)</span></div>
-                    <div class="bar-bg"><div id="bar-cal-terca" class="bar-fill fill-cal" style="width: 0%;"></div></div>
-                </div>
-                <div class="macro-row">
-                    <div class="macro-info"><span>Água</span><span id="label-water-terca">0L / 3.0L (0%)</span></div>
-                    <div class="bar-bg"><div id="bar-water-terca" class="bar-fill fill-water" style="width: 0%;"></div></div>
-                </div>
-                <div class="meal-list" id="lista-refeicoes-terca" style="display:none;"></div>
-            </div>
-
-            <!-- FORMULÁRIO DE LANÇAMENTO -->
-            <div class="form-upload">
-                <h3 id="form-title">🍱 Registrar Alimento / Água</h3>
-                <div class="input-row">
-                    <div class="input-group">
-                        <label>Tipo de Registro</label>
-                        <select id="tipo-registro" onchange="alternarCampos()">
-                            <option value="refeicao">🍱 Refeição</option>
-                            <option value="agua">💧 Apenas Água</option>
-                        </select>
-                    </div>
-                    <div class="input-group" id="grupo-nome">
-                        <label>Nome da Refeição</label>
-                        <input type="text" id="nome-refeicao" placeholder="Ex: Almoço Terça">
-                    </div>
-                </div>
-                <div id="campos-refeicao">
-                    <div class="input-row">
-                        <div class="input-group">
-                            <label>Proteína (g)</label>
-                            <input type="number" id="input-prot" placeholder="g">
-                        </div>
-                        <div class="input-group">
-                            <label>Calorias (kcal)</label>
-                            <input type="number" id="input-cal" placeholder="kcal">
-                        </div>
-                    </div>
-                </div>
-                <div id="campos-agua" style="display: none; margin-bottom: 12px;">
-                    <div class="input-group">
-                        <label>Quantidade de Água (ml)</label>
-                        <input type="number" id="input-agua" placeholder="Ex: 500">
-                    </div>
-                </div>
-                <button class="btn-submit" id="btn-salvar" onclick="adicionarItem()">Lançar na Nuvem</button>
-            </div>
-        </div>
-    </div>
-
-  <script>
-        // 1. COLE AQUI O SEU LINK DO APPS SCRIPT (O mesmo que você já usava para gravar)
+<script>
+        // 1. Seu link do Apps Script (Inalterado)
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxQhGsF8_GJztqLiGldJJsEsvbga5yMJEabrj-_wZ6GHCfq2ojxAo_zgCtA311XYiPDtw/exec';
         
-        // 2. COLE AQUI APENAS O ID DA SUA PLANILHA (Copiado no Passo 2)
-        
-
         let dadosTerca = { prot: 0, cal: 0, water: 0, refeicoes: [] };
         const metas = { prot: 138, cal: 2200, water: 3000 };
 
@@ -392,17 +37,24 @@
 
             document.getElementById('status-nuvem').innerText = "⏳ Salvando dados no Google Sheets...";
 
+            // CORREÇÃO AQUI: Adicionado mode: 'no-cors' para destravar o celular
             fetch(SCRIPT_URL, {
                 method: 'POST',
+                mode: 'no-cors',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
                 body: JSON.stringify(itemParaEnviar)
             })
             .then(() => {
+                document.getElementById('status-nuvem').innerText = "✅ Salvo com sucesso!";
                 document.getElementById('nome-refeicao').value = '';
                 document.getElementById('input-prot').value = '';
                 document.getElementById('input-cal').value = '';
                 document.getElementById('input-agua').value = '';
-                // Aguarda 1.5 segundos para o Google processar e recarrega
-                setTimeout(carregarDadosNuvem, 1500);
+                
+                // Aguarda 2 segundos para o Google processar na planilha e atualiza a tela
+                setTimeout(carregarDadosNuvem, 2000);
             })
             .catch(err => {
                 console.error(err);
@@ -411,35 +63,23 @@
         }
 
         function carregarDadosNuvem() {
-            // Usa a API pública de planilhas do Google (Leitura instantânea sem bloqueios)
-            const urlLeitura = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&sheet=Terça`;
-
-            fetch(urlLeitura)
-            .then(res => res.text())
-            .then(data => {
-                // Remove a proteção de dados que o Google envia no JSON
-                const jsonString = data.substring(47, data.length - 2);
-                const json = JSON.parse(jsonString);
-                const rows = json.table.rows;
-
+            document.getElementById('status-nuvem').innerText = "🔄 Sincronizando com o Google Sheets...";
+            
+            // CORREÇÃO AQUI: Agora lê usando o próprio Apps Script (doGet), sem depender de variáveis extras
+            fetch(SCRIPT_URL)
+            .then(res => res.json())
+            .then(rows => {
                 dadosTerca = { prot: 0, cal: 0, water: 0, refeicoes: [] };
 
                 rows.forEach(row => {
-                    // Mapeia as colunas: B (Dia), C (Tipo), D (Nome), E (Proteína), F (Caloria), G (Água)
-                    const dia = row.c[1] ? row.c[1].v : '';
-                    const tipo = row.c[2] ? row.c[2].v : '';
-                    const nome = row.c[3] ? row.c[3].v : '-';
-                    const prot = row.c[4] ? parseInt(row.c[4].v) || 0 : 0;
-                    const cal = row.c[5] ? parseInt(row.c[5].v) || 0 : 0;
-                    const water = row.c[6] ? parseInt(row.c[6].v) || 0 : 0;
-
-                    if (dia === "Terça") {
-                        if (tipo === "refeicao") {
-                            dadosTerca.prot += prot;
-                            dadosTerca.cal += cal;
-                            dadosTerca.refeicoes.push({ nome: nome, prot: prot, cal: cal });
-                        } else {
-                            dadosTerca.water += water;
+                    // Garante que estamos lendo apenas os lançamentos cadastrados como Terça
+                    if (row.dia === "Terça") {
+                        if (row.tipo === "refeicao") {
+                            dadosTerca.prot += parseInt(row.prot) || 0;
+                            dadosTerca.cal += parseInt(row.cal) || 0;
+                            dadosTerca.refeicoes.push({ nome: row.nome, prot: parseInt(row.prot) || 0, cal: parseInt(row.cal) || 0 });
+                        } else if (row.tipo === "agua") {
+                            dadosTerca.water += parseInt(row.water) || 0;
                         }
                     }
                 });
@@ -478,5 +118,3 @@
             }
         }
     </script>
-</body>
-</html>
