@@ -350,9 +350,12 @@
         </div>
     </div>
 
-    <script>
-        // SUBSTITUA ESSA URL COMPLETA PELA SUA URL COPIADA NO PASSO 2
+  <script>
+        // 1. COLE AQUI O SEU LINK DO APPS SCRIPT (O mesmo que você já usava para gravar)
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxQhGsF8_GJztqLiGldJJsEsvbga5yMJEabrj-_wZ6GHCfq2ojxAo_zgCtA311XYiPDtw/exec';
+        
+        // 2. COLE AQUI APENAS O ID DA SUA PLANILHA (Copiado no Passo 2)
+        const SPREADSHEET_ID = 'AKfycbxQhGsF8_GJztqLiGldJJsEsvbga5yMJEabrj-_wZ6GHCfq2ojxAo_zgCtA311XYiPDtw';
 
         let dadosTerca = { prot: 0, cal: 0, water: 0, refeicoes: [] };
         const metas = { prot: 138, cal: 2200, water: 3000 };
@@ -398,7 +401,8 @@
                 document.getElementById('input-prot').value = '';
                 document.getElementById('input-cal').value = '';
                 document.getElementById('input-agua').value = '';
-                carregarDadosNuvem();
+                // Aguarda 1.5 segundos para o Google processar e recarrega
+                setTimeout(carregarDadosNuvem, 1500);
             })
             .catch(err => {
                 console.error(err);
@@ -407,28 +411,39 @@
         }
 
         function carregarDadosNuvem() {
-            if(SCRIPT_URL.includes('COLE_AQUI')) {
-                document.getElementById('status-nuvem').innerText = "⚠️ Link do Apps Script não configurado.";
-                return;
-            }
+            // Usa a API pública de planilhas do Google (Leitura instantânea sem bloqueios)
+            const urlLeitura = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&sheet=Terça`;
 
-            fetch(SCRIPT_URL)
-            .then(res => res.json())
-            .then(nuvemDados => {
+            fetch(urlLeitura)
+            .then(res => res.text())
+            .then(data => {
+                // Remove a proteção de dados que o Google envia no JSON
+                const jsonString = data.substring(47, data.length - 2);
+                const json = JSON.parse(jsonString);
+                const rows = json.table.rows;
+
                 dadosTerca = { prot: 0, cal: 0, water: 0, refeicoes: [] };
-                
-                nuvemDados.forEach(item => {
-                    if(item.dia === "Terça") {
-                        if(item.tipo === "refeicao") {
-                            dadosTerca.prot += parseInt(item.prot) || 0;
-                            dadosTerca.cal += parseInt(item.cal) || 0;
-                            dadosTerca.refeicoes.push({ nome: item.nome, prot: item.prot, cal: item.cal });
+
+                rows.forEach(row => {
+                    // Mapeia as colunas: B (Dia), C (Tipo), D (Nome), E (Proteína), F (Caloria), G (Água)
+                    const dia = row.c[1] ? row.c[1].v : '';
+                    const tipo = row.c[2] ? row.c[2].v : '';
+                    const nome = row.c[3] ? row.c[3].v : '-';
+                    const prot = row.c[4] ? parseInt(row.c[4].v) || 0 : 0;
+                    const cal = row.c[5] ? parseInt(row.c[5].v) || 0 : 0;
+                    const water = row.c[6] ? parseInt(row.c[6].v) || 0 : 0;
+
+                    if (dia === "Terça") {
+                        if (tipo === "refeicao") {
+                            dadosTerca.prot += prot;
+                            dadosTerca.cal += cal;
+                            dadosTerca.refeicoes.push({ nome: nome, prot: prot, cal: cal });
                         } else {
-                            dadosTerca.water += parseInt(item.water) || 0;
+                            dadosTerca.water += water;
                         }
                     }
                 });
-                
+
                 atualizarPainelTerca();
                 document.getElementById('status-nuvem').innerText = "✅ Sincronizado com Google Sheets";
             })
