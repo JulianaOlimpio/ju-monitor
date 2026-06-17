@@ -474,7 +474,6 @@
         }
 
         function carregarDadosNuvem() {
-            // Nova URL com tqx=out:csv ignora restrições do CORS e funciona diretamente no navegador
             const urlBypassCORS = `https://docs.google.com/spreadsheets/d/${SCRIPT_ID}/gviz/tq?tqx=out:csv`;
 
             fetch(urlBypassCORS)
@@ -491,12 +490,22 @@
         }
 
         function parseCSV(text) {
+            if (!text) return [];
             let lines = text.split(/\r\n|\n/);
             let result = [];
+            
+            // Leitura segura linha por linha limpando as aspas do formato gviz
             for (let i = 1; i < lines.length; i++) {
-                if (!lines[i]) continue;
-                let cells = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                result.push(cells.map(c => c.replace(/^"|"$/g, '').trim()));
+                let line = lines[i].trim();
+                if (!line) continue;
+                
+                let cells = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                let cleanedCells = cells.map(c => {
+                    if (!c) return '';
+                    return c.replace(/^"|"$/g, '').trim();
+                });
+                
+                result.push(cleanedCells);
             }
             return result;
         }
@@ -506,8 +515,9 @@
             let mapeamentoDias = {};
             let contadorDias = 1;
 
+            // Mapeia as datas únicas encontradas na coluna A para os respectivos dias do desafio
             linhasPlanilha.forEach(colunas => {
-                if (!colunas[0]) return;
+                if (!colunas || colunas.length === 0 || !colunas[0]) return;
                 let dataLimpa = colunas[0].split(' ')[0]; 
 
                 if (!mapeamentoDias[dataLimpa]) {
@@ -519,7 +529,7 @@
             let diasConcluidosSet = new Set();
 
             linhasPlanilha.forEach(colunas => {
-                if (!colunas[0]) return;
+                if (!colunas || colunas.length < 3 || !colunas[0]) return;
                 
                 let dataLimpa = colunas[0].split(' ')[0];
                 let diaDoCard = mapeamentoDias[dataLimpa];
