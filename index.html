@@ -324,7 +324,17 @@
         #resultado-ia { margin-top: 10px; font-size: 12px; color: #333; text-align: left; }
 
         @media print {
-            .form-upload, .box-ia, .btn-pdf, .avatar-moderno, #status-nuvem, .nav-dias-wrapper, .panel-macro-30 { display: none !important; }
+            .form-upload, .box-ia, .btn-pdf, .avatar-moderno, #status-nuvem, .nav-dias-wrapper { 
+                display: none !important; 
+            }
+            .calendar-grid { 
+                display: block !important; 
+            }
+            .day-card { 
+                display: block !important; 
+                margin-bottom: 20px !important; 
+                page-break-inside: avoid; 
+            }
         }
     </style>
 </head>
@@ -343,6 +353,7 @@
         
         <div id="status-nuvem">🔄 Sincronizando com o Google Sheets...</div>
 
+        <!-- VISÃO MACRO -->
         <div class="panel-macro-30">
             <div class="macro-title">
                 <span>🏆 Progresso Geral do Objetivo</span>
@@ -358,6 +369,7 @@
             📄 Exportar Relatório (PDF)
         </button>
 
+        <!-- SELETOR DE DIAS -->
         <div class="nav-dias-wrapper">
             <div class="nav-dias-label">📅 Histórico do Desafio:</div>
             <div class="nav-dias" id="barra-dias">
@@ -371,25 +383,7 @@
 
         <div class="calendar-grid">
             
-            <div class="day-card">
-                <div class="day-header">
-                    <span class="day-title" id="nome-dia-titulo">Dia 1</span>
-                </div>
-                <div class="macro-row">
-                    <div class="macro-info"><span>Proteína</span><span id="label-prot">0g / 138g (0%)</span></div>
-                    <div class="bar-bg"><div id="bar-prot" class="bar-fill fill-prot"></div></div>
-                </div>
-                <div class="macro-row">
-                    <div class="macro-info"><span>Calorias</span><span id="label-cal">0 kcal / 2200 kcal (0%)</span></div>
-                    <div class="bar-bg"><div id="bar-cal" class="bar-fill fill-cal"></div></div>
-                </div>
-                <div class="macro-row">
-                    <div class="macro-info"><span>Água</span><span id="label-water">0L / 3.0L (0%)</span></div>
-                    <div class="bar-bg"><div id="bar-water" class="bar-fill fill-water"></div></div>
-                </div>
-                <div class="meal-list" id="lista-refeicoes" style="display:none;"></div>
-            </div>
-
+            <!-- ANALISADOR COM IA -->
             <div class="box-ia">
                 <h3>🤖 Analisar Prato com IA</h3>
                 <input type="file" id="foto-refeicao" accept="image/*" style="font-size: 12px; width: 100%;">
@@ -397,6 +391,7 @@
                 <div id="resultado-ia"></div>
             </div>
 
+            <!-- FORMULÁRIO -->
             <div class="form-upload">
                 <h3>🍱 Registrar para o <span id="dia-registro-label">Dia 1</span></h3>
                 <div class="input-row">
@@ -505,37 +500,40 @@
         }
 
         function processarEExibirDados() {
-            let dadosFiltrados = { prot: 0, cal: 0, water: 0, refeicoes: [] };
+            let diasConcluidosSet = new Set();
             let datasUnicasOrdenadas = [];
+            let dadosPorDia = {};
 
-            // 1. Extrai as datas únicas no formato string para ordenar de forma cronológica estável
+            // 1. Extrai as datas únicas
             linhasPlanilha.forEach(colunas => {
                 if (!colunas || colunas.length === 0 || !colunas[0]) return;
-                let dataLimpa = colunas[0].split(' ')[0]; // obtém apenas "DD/MM/AAAA"
+                let dataLimpa = colunas[0].split(' ')[0];
                 if (dataLimpa && !datasUnicasOrdenadas.includes(dataLimpa) && dataLimpa.includes('/')) {
                     datasUnicasOrdenadas.push(dataLimpa);
                 }
             });
 
-            // 2. Ordena as datas corretamente (Evita bugs se as linhas vierem desalinhadas por horário)
+            // 2. Ordena cronologicamente
             datasUnicasOrdenadas.sort((a, b) => {
                 const pA = a.split('/'); const pB = b.split('/');
                 return new Date(pA[2], pA[1]-1, pA[0]) - new Date(pB[2], pB[1]-1, pB[0]);
             });
 
-            // 3. Cria o mapeamento rigoroso: data estável -> Dia do Desafio
+            // 3. Mapeia as datas para "Dia X" e inicializa os dados de cada dia
             let mapeamentoDias = {};
             datasUnicasOrdenadas.forEach((dataStr, index) => {
-                mapeamentoDias[dataStr] = `Dia ${index + 1}`;
+                let nomeDia = `Dia ${index + 1}`;
+                mapeamentoDias[dataStr] = nomeDia;
+                dadosPorDia[nomeDia] = { prot: 0, cal: 0, water: 0, refeicoes: [] };
             });
 
-            let diasConcluidosSet = new Set();
-
+            // 4. Agrega os valores vindos da planilha por dia correspondente
             linhasPlanilha.forEach(colunas => {
                 if (!colunas || colunas.length < 3 || !colunas[0]) return;
                 
                 let dataLimpa = colunas[0].split(' ')[0];
                 let diaDoCard = mapeamentoDias[dataLimpa];
+                if(!diaDoCard) return;
 
                 const tipo = colunas[2] || '';
                 const nome = colunas[3] || '-';
@@ -547,17 +545,16 @@
                     diasConcluidosSet.add(diaDoCard);
                 }
 
-                if (diaDoCard === diaSelecionado) {
-                    if (tipo.toLowerCase() === "refeicao") {
-                        dadosFiltrados.prot += prot;
-                        dadosFiltrados.cal += cal;
-                        dadosFiltrados.refeicoes.push({ nome: nome, prot: prot, cal: cal });
-                    } else if (tipo.toLowerCase() === "agua") {
-                        dadosFiltrados.water += water;
-                    }
+                if (tipo.toLowerCase() === "refeicao") {
+                    dadosPorDia[diaDoCard].prot += prot;
+                    dadosPorDia[diaDoCard].cal += cal;
+                    dadosPorDia[diaDoCard].refeicoes.push({ nome: nome, prot: prot, cal: cal });
+                } else if (tipo.toLowerCase() === "agua") {
+                    dadosPorDia[diaDoCard].water += water;
                 }
             });
 
+            // Atualiza painel macro superior
             const totalDiasFeitos = diasConcluidosSet.size;
             const pctMacro = Math.min(Math.round((totalDiasFeitos / 30) * 100), 100);
             const diasRestantes = 30 - totalDiasFeitos;
@@ -571,30 +568,52 @@
                 document.getElementById('insight-falta').innerText = `🏆 Incrível! Você completou os 30 dias do objetivo!`;
             }
 
-            document.getElementById('nome-dia-titulo').innerText = diaSelecionado;
+            // 5. Renderiza a lista de cards no Grid. 
+            const grid = document.querySelector('.calendar-grid');
+            
+            // Remove cards antigos para não duplicar
+            const cardsAntigos = grid.querySelectorAll('.day-card');
+            cardsAntigos.forEach(c => c.remove());
 
-            const pctProt = Math.min(Math.round((dadosFiltrados.prot / metas.prot) * 100), 100);
-            const pctCal = Math.min(Math.round((dadosFiltrados.cal / metas.cal) * 100), 100);
-            const pctWater = Math.min(Math.round((dadosFiltrados.water / metas.water) * 100), 100);
+            // Cria dinamicamente os cards de todos os dias que possuem dados
+            Object.keys(dadosPorDia).forEach(nomeDia => {
+                const dados = dadosPorDia[nomeDia];
+                const pctProt = Math.min(Math.round((dados.prot / metas.prot) * 100), 100);
+                const pctCal = Math.min(Math.round((dados.cal / metas.cal) * 100), 100);
+                const pctWater = Math.min(Math.round((dados.water / metas.water) * 100), 100);
 
-            document.getElementById('label-prot').innerText = `${dadosFiltrados.prot}g / ${metas.prot}g (${pctProt}%)`;
-            document.getElementById('label-cal').innerText = `${dadosFiltrados.cal} kcal / ${metas.cal} kcal (${pctCal}%)`;
-            document.getElementById('label-water').innerText = `${(dadosFiltrados.water / 1000).toFixed(1)}L / 3.0L (${pctWater}%)`;
+                let refeicoesHtml = '';
+                if (dados.refeicoes.length > 0) {
+                    dados.refeicoes.forEach(item => {
+                        refeicoesHtml += `<div class="meal-item"><span><b>${item.nome}:</b> ${item.prot}g P | ${item.cal} kcal</span></div>`;
+                    });
+                }
 
-            document.getElementById('bar-prot').style.width = pctProt + '%';
-            document.getElementById('bar-cal').style.width = pctCal + '%';
-            document.getElementById('bar-water').style.width = pctWater + '%';
-
-            const lista = document.getElementById('lista-refeicoes');
-            if (dadosFiltrados.refeicoes.length > 0) {
-                lista.style.display = 'block';
-                lista.innerHTML = '';
-                dadosFiltrados.refeicoes.forEach(item => {
-                    lista.innerHTML += `<div class="meal-item"><span><b>${item.nome}:</b> ${item.prot}g P | ${item.cal} kcal</span></div>`;
-                });
-            } else {
-                lista.style.display = 'none';
-            }
+                const cardHtml = `
+                    <div class="day-card" id="card-${nomeDia.replace(' ', '-')}" style="${nomeDia === diaSelecionado ? '' : 'display:none;'}">
+                        <div class="day-header">
+                            <span class="day-title">${nomeDia}</span>
+                        </div>
+                        <div class="macro-row">
+                            <div class="macro-info"><span>Proteína</span><span>${dados.prot}g / ${metas.prot}g (${pctProt}%)</span></div>
+                            <div class="bar-bg"><div class="bar-fill fill-prot" style="width: ${pctProt}%"></div></div>
+                        </div>
+                        <div class="macro-row">
+                            <div class="macro-info"><span>Calorias</span><span>${dados.cal} kcal / ${metas.cal} kcal (${pctCal}%)</span></div>
+                            <div class="bar-bg"><div class="bar-fill fill-cal" style="width: ${pctCal}%"></div></div>
+                        </div>
+                        <div class="macro-row">
+                            <div class="macro-info"><span>Água</span><span>${(dados.water / 1000).toFixed(1)}L / 3.0L (${pctWater}%)</span></div>
+                            <div class="bar-bg"><div class="bar-fill fill-water" style="width: ${pctWater}%"></div></div>
+                        </div>
+                        <div class="meal-list" style="${dados.refeicoes.length > 0 ? '' : 'display:none;'}">
+                            ${refeicoesHtml}
+                        </div>
+                    </div>
+                `;
+                
+                grid.insertAdjacentHTML('afterbegin', cardHtml);
+            });
         }
 
         function adicionarItem() {
@@ -680,7 +699,8 @@
 
                     const jsonResposta = await resposta.json();
                     let textoResultado = jsonResposta.candidates[0].content.parts[0].text;
-                    textoResultado = textoResultado.replace(/```json/g, '').replace(/```/g, '').trim();
+                    textoResultado = textoResultado.replace(/```json/g, '').replace(/
+```/g, '').trim();
                     const dadosComida = JSON.parse(textoResultado);
 
                     resultadoDiv.innerHTML = `
