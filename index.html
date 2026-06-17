@@ -109,7 +109,7 @@
             transition: width 0.5s ease;
         }
         
-        /* LINHA DE BOTÕES DOS DIAS (CORRIGIDO) */
+        /* LINHA DE BOTÕES DOS DIAS */
         .nav-dias-wrapper {
             margin-bottom: 15px;
         }
@@ -359,41 +359,16 @@
             📄 Exportar Relatório (PDF)
         </button>
 
-        <!-- SELETOR CORRIGIDO: NAVEGAÇÃO DOS 30 DIAS -->
+        <!-- SELETOR: NAVEGAÇÃO DOS 30 DIAS -->
         <div class="nav-dias-wrapper">
             <div class="nav-dias-label">📅 Histórico do Desafio:</div>
             <div class="nav-dias" id="barra-dias">
-                <!-- Botões inseridos diretamente de forma estática para garantir renderização instantânea -->
-                <button class="btn-dia active" id="btn-Dia-1" onclick="mudarDiaExibido('Dia 1')">Dia 1</button>
-                <button class="btn-dia" id="btn-Dia-2" onclick="mudarDiaExibido('Dia 2')">Dia 2</button>
-                <button class="btn-dia" id="btn-Dia-3" onclick="mudarDiaExibido('Dia 3')">Dia 3</button>
-                <button class="btn-dia" id="btn-Dia-4" onclick="mudarDiaExibido('Dia 4')">Dia 4</button>
-                <button class="btn-dia" id="btn-Dia-5" onclick="mudarDiaExibido('Dia 5')">Dia 5</button>
-                <button class="btn-dia" id="btn-Dia-6" onclick="mudarDiaExibido('Dia 6')">Dia 6</button>
-                <button class="btn-dia" id="btn-Dia-7" onclick="mudarDiaExibido('Dia 7')">Dia 7</button>
-                <button class="btn-dia" id="btn-Dia-8" onclick="mudarDiaExibido('Dia 8')">Dia 8</button>
-                <button class="btn-dia" id="btn-Dia-9" onclick="mudarDiaExibido('Dia 9')">Dia 9</button>
-                <button class="btn-dia" id="btn-Dia-10" onclick="mudarDiaExibido('Dia 10')">Dia 10</button>
-                <button class="btn-dia" id="btn-Dia-11" onclick="mudarDiaExibido('Dia 11')">Dia 11</button>
-                <button class="btn-dia" id="btn-Dia-12" onclick="mudarDiaExibido('Dia 12')">Dia 12</button>
-                <button class="btn-dia" id="btn-Dia-13" onclick="mudarDiaExibido('Dia 13')">Dia 13</button>
-                <button class="btn-dia" id="btn-Dia-14" onclick="mudarDiaExibido('Dia 14')">Dia 14</button>
-                <button class="btn-dia" id="btn-Dia-15" onclick="mudarDiaExibido('Dia 15')">Dia 15</button>
-                <button class="btn-dia" id="btn-Dia-16" onclick="mudarDiaExibido('Dia 16')">Dia 16</button>
-                <button class="btn-dia" id="btn-Dia-17" onclick="mudarDiaExibido('Dia 17')">Dia 17</button>
-                <button class="btn-dia" id="btn-Dia-18" onclick="mudarDiaExibido('Dia 18')">Dia 18</button>
-                <button class="btn-dia" id="btn-Dia-19" onclick="mudarDiaExibido('Dia 19')">Dia 19</button>
-                <button class="btn-dia" id="btn-Dia-20" onclick="mudarDiaExibido('Dia 20')">Dia 20</button>
-                <button class="btn-dia" id="btn-Dia-21" onclick="mudarDiaExibido('Dia 21')">Dia 21</button>
-                <button class="btn-dia" id="btn-Dia-22" onclick="mudarDiaExibido('Dia 22')">Dia 22</button>
-                <button class="btn-dia" id="btn-Dia-23" onclick="mudarDiaExibido('Dia 23')">Dia 23</button>
-                <button class="btn-dia" id="btn-Dia-24" onclick="mudarDiaExibido('Dia 24')">Dia 24</button>
-                <button class="btn-dia" id="btn-Dia-25" onclick="mudarDiaExibido('Dia 25')">Dia 25</button>
-                <button class="btn-dia" id="btn-Dia-26" onclick="mudarDiaExibido('Dia 26')">Dia 26</button>
-                <button class="btn-dia" id="btn-Dia-27" onclick="mudarDiaExibido('Dia 27')">Dia 27</button>
-                <button class="btn-dia" id="btn-Dia-28" onclick="mudarDiaExibido('Dia 28')">Dia 28</button>
-                <button class="btn-dia" id="btn-Dia-29" onclick="mudarDiaExibido('Dia 29')">Dia 29</button>
-                <button class="btn-dia" id="btn-Dia-30" onclick="mudarDiaExibido('Dia 30')">Dia 30</button>
+                <!-- Botões gerados de 1 a 30 -->
+                <script>
+                    for(let i=1; i<=30; i++) {
+                        document.write(`<button class="btn-dia ${i===1?'active':''}" id="btn-Dia-${i}" onclick="mudarDiaExibido('Dia ${i}')">Dia ${i}</button>`);
+                    }
+                </script>
             </div>
         </div>
 
@@ -485,7 +460,7 @@
                 const btn = document.getElementById(`btn-Dia-${i}`);
                 if(btn) btn.classList.remove('active');
             }
-            const btnAtivo = document.getElementById(`btn-${dia}`);
+            const btnAtivo = document.getElementById(`btn-${dia.replace(" ", "-")}`);
             if(btnAtivo) btnAtivo.classList.add('active');
 
             document.getElementById('dia-registro-label').innerText = dia;
@@ -520,24 +495,44 @@
 
         function processarEExibirDados() {
             let dadosFiltrados = { prot: 0, cal: 0, water: 0, refeicoes: [] };
-            let diasConcluidosSet = new Set(); 
+            
+            // Mapeia automaticamente as datas reais para "Dia 1", "Dia 2", etc.
+            let mapeamentoDias = {};
+            let contadorDias = 1;
 
             bancoDadosCompleto.forEach(row => {
-                if (!row.c) return;
-                let dia = row.c[1] ? row.c[1].v : '';
+                if (!row.c || !row.c[0]) return;
+                
+                // Extrai a data limpa (ex: "16/06/2026") ignorando o horário
+                let dataCompleta = row.c[0].f || row.c[0].v;
+                let dataLimpa = dataCompleta.split(' ')[0]; 
+
+                if (!mapeamentoDias[dataLimpa]) {
+                    mapeamentoDias[dataLimpa] = `Dia ${contadorDias}`;
+                    contadorDias++;
+                }
+            });
+
+            let diasConcluidosSet = new Set();
+
+            bancoDadosCompleto.forEach(row => {
+                if (!row.c || !row.c[0]) return;
+                
+                let dataCompleta = row.c[0].f || row.c[0].v;
+                let dataLimpa = dataCompleta.split(' ')[0];
+                let diaDoCard = mapeamentoDias[dataLimpa]; // Converte a data real para "Dia X"
+
                 const tipo = row.c[2] ? row.c[2].v : '';
                 const nome = row.c[3] ? row.c[3].v : '-';
                 const prot = row.c[4] ? parseInt(row.c[4].v) || 0 : 0;
                 const cal = row.c[5] ? parseInt(row.c[5].v) || 0 : 0;
                 const water = row.c[6] ? parseInt(row.c[6].v) || 0 : 0;
 
-                if(!isNaN(dia) && dia !== '') { dia = `Dia ${dia}`; }
-
-                if (dia && (prot > 0 || cal > 0 || water > 0)) {
-                    diasConcluidosSet.add(dia);
+                if (prot > 0 || cal > 0 || water > 0) {
+                    diasConcluidosSet.add(diaDoCard);
                 }
 
-                if (dia === diaSelecionado) {
+                if (diaDoCard === diaSelecionado) {
                     if (tipo === "refeicao") {
                         dadosFiltrados.prot += prot;
                         dadosFiltrados.cal += cal;
@@ -591,7 +586,12 @@
 
         function adicionarItem() {
             const tipo = document.getElementById('tipo-registro').value;
-            let itemParaEnviar = { dia: diaSelecionado, tipo: tipo, nome: "-", prot: 0, cal: 0, water: 0 };
+            
+            // Obtém o nome do dia da semana atual para salvar coerente com o seu histórico
+            const diasSemana = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+            const hojeNome = diasSemana[new Date().getDay()];
+
+            let itemParaEnviar = { dia: hojeNome, tipo: tipo, nome: "-", prot: 0, cal: 0, water: 0 };
 
             if (tipo === 'refeicao') {
                 const nome = document.getElementById('nome-refeicao').value || 'Refeição';
@@ -692,7 +692,11 @@
 
         function salvarRefeicaoIA(nome, prot, cal) {
             document.getElementById('status-nuvem').innerText = "⏳ Salvando dados da IA no Google Sheets...";
-            let itemParaEnviar = { dia: diaSelecionado, tipo: "refeicao", nome: nome, prot: parseInt(prot), cal: parseInt(cal), water: 0 };
+            
+            const diasSemana = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+            const hojeNome = diasSemana[new Date().getDay()];
+
+            let itemParaEnviar = { dia: hojeNome, tipo: "refeicao", nome: nome, prot: parseInt(prot), cal: parseInt(cal), water: 0 };
 
             fetch(SCRIPT_URL, {
                 method: 'POST',
