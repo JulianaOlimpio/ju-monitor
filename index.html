@@ -273,6 +273,22 @@
             cursor: pointer;
             margin-top: 5px;
         }
+        .btn-pdf {
+            background: #fff;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+            width: 100%;
+            padding: 10px;
+            border-radius: 14px;
+            font-weight: bold;
+            font-size: 13px;
+            cursor: pointer;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
         #status-nuvem {
             text-align: center;
             font-size: 11px;
@@ -306,6 +322,10 @@
             width: 100%;
         }
         #resultado-ia { margin-top: 10px; font-size: 12px; color: #333; text-align: left; }
+
+        @media print {
+            .form-upload, .box-ia, .btn-pdf, .avatar-moderno, #status-nuvem, .nav-dias-wrapper, .panel-macro-30 { display: none !important; }
+        }
     </style>
 </head>
 <body>
@@ -323,7 +343,6 @@
         
         <div id="status-nuvem">🔄 Sincronizando com o Google Sheets...</div>
 
-        <!-- VISÃO MACRO -->
         <div class="panel-macro-30">
             <div class="macro-title">
                 <span>🏆 Progresso Geral do Objetivo</span>
@@ -335,7 +354,10 @@
             <p id="insight-falta" style="font-size: 11px; margin: 8px 0 0 0; color: var(--text-support); font-weight: 500;">Carregando métricas macro...</p>
         </div>
 
-        <!-- SELETOR DE DIAS -->
+        <button class="btn-pdf" onclick="window.print()">
+            📄 Exportar Relatório (PDF)
+        </button>
+
         <div class="nav-dias-wrapper">
             <div class="nav-dias-label">📅 Histórico do Desafio:</div>
             <div class="nav-dias" id="barra-dias">
@@ -349,7 +371,25 @@
 
         <div class="calendar-grid">
             
-            <!-- ANALISADOR COM IA -->
+            <div class="day-card">
+                <div class="day-header">
+                    <span class="day-title" id="nome-dia-titulo">Dia 1</span>
+                </div>
+                <div class="macro-row">
+                    <div class="macro-info"><span>Proteína</span><span id="label-prot">0g / 138g (0%)</span></div>
+                    <div class="bar-bg"><div id="bar-prot" class="bar-fill fill-prot"></div></div>
+                </div>
+                <div class="macro-row">
+                    <div class="macro-info"><span>Calorias</span><span id="label-cal">0 kcal / 2200 kcal (0%)</span></div>
+                    <div class="bar-bg"><div id="bar-cal" class="bar-fill fill-cal"></div></div>
+                </div>
+                <div class="macro-row">
+                    <div class="macro-info"><span>Água</span><span id="label-water">0L / 3.0L (0%)</span></div>
+                    <div class="bar-bg"><div id="bar-water" class="bar-fill fill-water"></div></div>
+                </div>
+                <div class="meal-list" id="lista-refeicoes" style="display:none;"></div>
+            </div>
+
             <div class="box-ia">
                 <h3>🤖 Analisar Prato com IA</h3>
                 <input type="file" id="foto-refeicao" accept="image/*" style="font-size: 12px; width: 100%;">
@@ -357,7 +397,6 @@
                 <div id="resultado-ia"></div>
             </div>
 
-            <!-- FORMULÁRIO -->
             <div class="form-upload">
                 <h3>🍱 Registrar para o <span id="dia-registro-label">Dia 1</span></h3>
                 <div class="input-row">
@@ -393,36 +432,13 @@
                 </div>
                 <button class="btn-submit" onclick="adicionarItem()">Lançar na Nuvem</button>
             </div>
-
-            <!-- CARD COMPARTILHADO DA EXIBIÇÃO DO DIA SELECIONADO -->
-            <div class="day-card" id="card-dia-ativo">
-                <div class="day-header">
-                    <span class="day-title" id="card-titulo-dia">Dia 1</span>
-                </div>
-                <div class="macro-row">
-                    <div class="macro-info"><span>Proteína</span><span id="txt-prot">0g / 138g (0%)</span></div>
-                    <div class="bar-bg"><div id="bar-prot" class="bar-fill fill-prot"></div></div>
-                </div>
-                <div class="macro-row">
-                    <div class="macro-info"><span>Calorias</span><span id="txt-cal">0 kcal / 2200 kcal (0%)</span></div>
-                    <div class="bar-bg"><div id="bar-cal" class="bar-fill fill-cal"></div></div>
-                </div>
-                <div class="macro-row">
-                    <div class="macro-info"><span>Água</span><span id="txt-water">0.0L / 3.0L (0%)</span></div>
-                    <div class="bar-bg"><div id="bar-water" class="bar-fill fill-water"></div></div>
-                </div>
-                <div class="meal-list" id="card-lista-refeicoes" style="display: none;">
-                    <!-- Itens inseridos dinamicamente -->
-                </div>
-            </div>
-
         </div>
     </div>
 
     <script>
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxQhGsF8_GJztqLiGldJJsEsvbga5yMJEabrj-_wZ6GHCfq2ojxAo_zgCtA311XYiPDtw/exec';
         const SCRIPT_ID = '1IQ4lgm2ddNbx4lFYRcAsu9eugq6_LhrwuY7fCiNYVr4';
-        const GEMINI_API_KEY = 'AQ.Ab8RN6LNLjB6V12rNneESiKfY9sRRo3PWt5T3rzb1XEwsHKyZA';
+        const GEMINI_API_KEY = 'AQ.Ab8RN6I_-TSranAZDdr7WaLbzqz8InIV1xe4aeJKp7b9t3VLFA';
 
         let diaSelecionado = "Dia 1"; 
         let linhasPlanilha = []; 
@@ -442,8 +458,6 @@
             if(btnAtivo) btnAtivo.classList.add('active');
 
             document.getElementById('dia-registro-label').innerText = dia;
-            document.getElementById('card-titulo-dia').innerText = dia;
-
             processarEExibirDados();
         }
 
@@ -491,36 +505,37 @@
         }
 
         function processarEExibirDados() {
-            let diasConcluidosSet = new Set();
+            let dadosFiltrados = { prot: 0, cal: 0, water: 0, refeicoes: [] };
             let datasUnicasOrdenadas = [];
 
+            // 1. Extrai as datas únicas no formato string para ordenar de forma cronológica estável
             linhasPlanilha.forEach(colunas => {
                 if (!colunas || colunas.length === 0 || !colunas[0]) return;
-                let dataLimpa = colunas[0].split(' ')[0];
+                let dataLimpa = colunas[0].split(' ')[0]; // obtém apenas "DD/MM/AAAA"
                 if (dataLimpa && !datasUnicasOrdenadas.includes(dataLimpa) && dataLimpa.includes('/')) {
                     datasUnicasOrdenadas.push(dataLimpa);
                 }
             });
 
+            // 2. Ordena as datas corretamente (Evita bugs se as linhas vierem desalinhadas por horário)
             datasUnicasOrdenadas.sort((a, b) => {
                 const pA = a.split('/'); const pB = b.split('/');
                 return new Date(pA[2], pA[1]-1, pA[0]) - new Date(pB[2], pB[1]-1, pB[0]);
             });
 
+            // 3. Cria o mapeamento rigoroso: data estável -> Dia do Desafio
             let mapeamentoDias = {};
             datasUnicasOrdenadas.forEach((dataStr, index) => {
                 mapeamentoDias[dataStr] = `Dia ${index + 1}`;
             });
 
-            let acumuladoDiaAtivo = { prot: 0, cal: 0, water: 0, refeicoes: [] };
+            let diasConcluidosSet = new Set();
 
             linhasPlanilha.forEach(colunas => {
                 if (!colunas || colunas.length < 3 || !colunas[0]) return;
                 
                 let dataLimpa = colunas[0].split(' ')[0];
-                let diaCorrespondente = mapeamentoDias[dataLimpa];
-
-                if (!diaCorrespondente) return;
+                let diaDoCard = mapeamentoDias[dataLimpa];
 
                 const tipo = colunas[2] || '';
                 const nome = colunas[3] || '-';
@@ -529,21 +544,20 @@
                 const water = parseInt(colunas[6]) || 0;
 
                 if (prot > 0 || cal > 0 || water > 0) {
-                    diasConcluidosSet.add(diaCorrespondente);
+                    diasConcluidosSet.add(diaDoCard);
                 }
 
-                if (diaCorrespondente === diaSelecionado) {
+                if (diaDoCard === diaSelecionado) {
                     if (tipo.toLowerCase() === "refeicao") {
-                        acumuladoDiaAtivo.prot += prot;
-                        acumuladoDiaAtivo.cal += cal;
-                        acumuladoDiaAtivo.refeicoes.push({ nome: nome, prot: prot, cal: cal });
+                        dadosFiltrados.prot += prot;
+                        dadosFiltrados.cal += cal;
+                        dadosFiltrados.refeicoes.push({ nome: nome, prot: prot, cal: cal });
                     } else if (tipo.toLowerCase() === "agua") {
-                        acumuladoDiaAtivo.water += water;
+                        dadosFiltrados.water += water;
                     }
                 }
             });
 
-            // Atualiza painel macro superior
             const totalDiasFeitos = diasConcluidosSet.size;
             const pctMacro = Math.min(Math.round((totalDiasFeitos / 30) * 100), 100);
             const diasRestantes = 30 - totalDiasFeitos;
@@ -557,31 +571,29 @@
                 document.getElementById('insight-falta').innerText = `🏆 Incrível! Você completou os 30 dias do objetivo!`;
             }
 
-            // Atualiza o Card Visual do dia selecionado
-            const pctProt = Math.min(Math.round((acumuladoDiaAtivo.prot / metas.prot) * 100), 100);
-            const pctCal = Math.min(Math.round((acumuladoDiaAtivo.cal / metas.cal) * 100), 100);
-            const pctWater = Math.min(Math.round((acumuladoDiaAtivo.water / metas.water) * 100), 100);
+            document.getElementById('nome-dia-titulo').innerText = diaSelecionado;
 
-            document.getElementById('txt-prot').innerText = `${acumuladoDiaAtivo.prot}g / ${metas.prot}g (${pctProt}%)`;
+            const pctProt = Math.min(Math.round((dadosFiltrados.prot / metas.prot) * 100), 100);
+            const pctCal = Math.min(Math.round((dadosFiltrados.cal / metas.cal) * 100), 100);
+            const pctWater = Math.min(Math.round((dadosFiltrados.water / metas.water) * 100), 100);
+
+            document.getElementById('label-prot').innerText = `${dadosFiltrados.prot}g / ${metas.prot}g (${pctProt}%)`;
+            document.getElementById('label-cal').innerText = `${dadosFiltrados.cal} kcal / ${metas.cal} kcal (${pctCal}%)`;
+            document.getElementById('label-water').innerText = `${(dadosFiltrados.water / 1000).toFixed(1)}L / 3.0L (${pctWater}%)`;
+
             document.getElementById('bar-prot').style.width = pctProt + '%';
-
-            document.getElementById('txt-cal').innerText = `${acumuladoDiaAtivo.cal} kcal / ${metas.cal} kcal (${pctCal}%)`;
             document.getElementById('bar-cal').style.width = pctCal + '%';
-
-            document.getElementById('txt-water').innerText = `${(acumuladoDiaAtivo.water / 1000).toFixed(1)}L / 3.0L (${pctWater}%)`;
             document.getElementById('bar-water').style.width = pctWater + '%';
 
-            const listaRefeicoesDiv = document.getElementById('card-lista-refeicoes');
-            if (acumuladoDiaAtivo.refeicoes.length > 0) {
-                listaRefeicoesDiv.style.display = 'block';
-                let htmlRefes = '';
-                acumuladoDiaAtivo.refeicoes.forEach(item => {
-                    htmlRefes += `<div class="meal-item"><span><b>${item.nome}:</b> ${item.prot}g P | ${item.cal} kcal</span></div>`;
+            const lista = document.getElementById('lista-refeicoes');
+            if (dadosFiltrados.refeicoes.length > 0) {
+                lista.style.display = 'block';
+                lista.innerHTML = '';
+                dadosFiltrados.refeicoes.forEach(item => {
+                    lista.innerHTML += `<div class="meal-item"><span><b>${item.nome}:</b> ${item.prot}g P | ${item.cal} kcal</span></div>`;
                 });
-                listaRefeicoesDiv.innerHTML = htmlRefes;
             } else {
-                listaRefeicoesDiv.style.display = 'none';
-                listaRefeicoesDiv.innerHTML = '';
+                lista.style.display = 'none';
             }
         }
 
@@ -635,6 +647,10 @@
                 alert('Por favor, selecione ou tire uma foto primeiro!');
                 return;
             }
+            if (GEMINI_API_KEY === 'SUA_CHAVE_GEMINI_AQUI') {
+                alert('Coloque sua chave API do Gemini!');
+                return;
+            }
 
             const arquivo = arquivoInput.files[0];
             resultadoDiv.innerHTML = "⏳ IA analisando a imagem... Aguarde.";
@@ -664,8 +680,7 @@
 
                     const jsonResposta = await resposta.json();
                     let textoResultado = jsonResposta.candidates[0].content.parts[0].text;
-                    textoResultado = textoResultado.replace(/```json/g, '').replace(/
-```/g, '').trim();
+                    textoResultado = textoResultado.replace(/```json/g, '').replace(/```/g, '').trim();
                     const dadosComida = JSON.parse(textoResultado);
 
                     resultadoDiv.innerHTML = `
