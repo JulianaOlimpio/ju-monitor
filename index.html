@@ -638,19 +638,16 @@
             });
         }
 
-        async function analisarPratoComIA() {
-            const arquivoInput = document.getElementById('foto-refeicao');
-            const resultadoDiv = document.getElementById('resultado-ia');
-            const btn = document.getElementById('btn-analisar');
+     async function analisarPratoComIA() {
+    const arquivoInput = document.getElementById('foto-refeicao');
+    const resultadoDiv = document.getElementById('resultado-ia');
+    const btn = document.getElementById('btn-analisar');
 
-            if (!arquivoInput.files || arquivoInput.files.length === 0) {
-                alert('Por favor, selecione ou tire uma foto primeiro!');
-                return;
-            }
-            if (GEMINI_API_KEY === 'AQ.Ab8RN6LNLjB6V12rNneESiKfY9sRRo3PWt5T3rzb1XEwsHKyZA') {
-                alert('Coloque sua chave API do Gemini!');
-                return;
-            }
+    if (!arquivoInput.files || arquivoInput.files.length === 0) {
+        alert('Por favor, selecione ou tire uma foto primeiro!');
+        return;
+    }
+            
 
             const arquivo = arquivoInput.files[0];
             resultadoDiv.innerHTML = "⏳ IA analisando a imagem... Aguarde.";
