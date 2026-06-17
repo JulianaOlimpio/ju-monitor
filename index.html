@@ -364,24 +364,29 @@
         </div>
     </div>
 
-    <script>
+  <script>
         // 1. LINK DO SEU APPS SCRIPT
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxQhGsF8_GJztqLiGldJJsEsvbga5yMJEabrj-_wZ6GHCfq2ojxAo_zgCtA311XYiPDtw/exec';
                 
         // 2. ID DA SUA PLANILHA GOOGLE
         const SCRIPT_ID = '1IQ4lgm2ddNbx4lFYRcAsu9eugq6_LhrwuY7fCiNYVr4';
 
-        // 3. SUA CHAVE DA API DO GEMINI (Substitua pela sua chave obtida no Google AI Studio)
+        // 3. SUA CHAVE DA API DO GEMINI
         const GEMINI_API_KEY = 'SUA_CHAVE_GEMINI_AQUI';
 
-        let dadosTerca = { prot: 0, cal: 0, water: 0, refeicoes: [] };
-        const metas = { prot: 138, cal: 2200, water: 3000 };
-        
+        // VARIÁVEIS GLOBAIS CORRIGIDAS NO TOPO
         const diasSemana = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
         const diaAtual = diasSemana[new Date().getDay()];
 
+        let dadosTerca = { prot: 0, cal: 0, water: 0, refeicoes: [] };
+        const metas = { prot: 138, cal: 2200, water: 3000 };
+
         window.onload = function() {
-            document.getElementById('nome-dia-titulo').innerText = `${diaAtual} (Hoje)`;
+            // Garante que o texto mude antes de buscar na nuvem
+            const tituloDia = document.getElementById('nome-dia-titulo');
+            if(tituloDia) {
+                tituloDia.innerText = `${diaAtual} (Hoje)`;
+            }
             carregarDadosNuvem();
         };
 
@@ -496,7 +501,6 @@
             }
         }
 
-        // --- FUNÇÕES DA INTELIGÊNCIA ARTIFICIAL (GEMINI) ---
         async function analisarPratoComIA() {
             const arquivoInput = document.getElementById('foto-refeicao');
             const resultadoDiv = document.getElementById('resultado-ia');
@@ -507,7 +511,7 @@
                 return;
             }
             if (GEMINI_API_KEY === 'SUA_CHAVE_GEMINI_AQUI') {
-                alert('Você precisa colocar sua chave API do Gemini no código (Linha 147)!');
+                alert('Você precisa colocar sua chave API do Gemini no código!');
                 return;
             }
 
@@ -540,8 +544,7 @@
 
                     const jsonResposta = await resposta.json();
                     let textoResultado = jsonResposta.candidates[0].content.parts[0].text;
-                    textoResultado = textoResultado.replace(/```json/g, '').replace(/
-```/g, '').trim();
+                    textoResultado = textoResultado.replace(/```json/g, '').replace(/```/g, '').trim();
                     const dadosComida = JSON.parse(textoResultado);
 
                     resultadoDiv.innerHTML = `
@@ -579,5 +582,3 @@
             });
         }
     </script>
-</body>
-</html>
