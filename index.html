@@ -17,7 +17,6 @@
             --accent-blue: #5bc0de;
             --accent-orange: #f0ad4e;
             --accent-green: #28a745;
-            --macro-gold: #ffd700;
         }
         body {
             font-family: '-apple-system', BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -110,33 +109,47 @@
             transition: width 0.5s ease;
         }
         
-        /* SELETOR DE DIAS (1 A 30) */
+        /* LINHA DE BOTÕES DOS DIAS (CORRIGIDO) */
+        .nav-dias-wrapper {
+            margin-bottom: 15px;
+        }
+        .nav-dias-label {
+            font-size: 11px;
+            font-weight: bold;
+            color: var(--text-support);
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
         .nav-dias {
             display: flex;
-            gap: 6px;
+            gap: 8px;
             overflow-x: auto;
-            padding-bottom: 10px;
-            margin-bottom: 15px;
-            scrollbar-width: none;
+            padding: 4px 2px 10px 2px;
+            scrollbar-width: thin;
         }
-        .nav-dias::-webkit-scrollbar { display: none; }
         
         .btn-dia {
             background: #fff;
             border: 1px solid var(--border-color);
-            padding: 8px 14px;
+            padding: 8px 16px;
             border-radius: 12px;
             font-size: 12px;
-            font-weight: 600;
+            font-weight: bold;
             color: var(--text-support);
             cursor: pointer;
             white-space: nowrap;
             transition: all 0.2s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+        }
+        .btn-dia:hover {
+            border-color: var(--primary-light);
+            background: #fff5f8;
         }
         .btn-dia.active {
             background: var(--primary);
             color: #fff;
             border-color: var(--primary);
+            box-shadow: 0 4px 10px rgba(255, 102, 163, 0.3);
         }
 
         .calendar-grid {
@@ -162,7 +175,7 @@
         }
         .day-title {
             font-weight: bold;
-            font-size: 15px;
+            font-size: 16px;
             color: var(--text);
         }
         .macro-row {
@@ -311,7 +324,7 @@
         #resultado-ia { margin-top: 10px; font-size: 12px; color: #333; text-align: left; }
 
         @media print {
-            .form-upload, .box-ia, .btn-pdf, .avatar-moderno, #status-nuvem, .nav-dias, .panel-macro-30 { display: none !important; }
+            .form-upload, .box-ia, .btn-pdf, .avatar-moderno, #status-nuvem, .nav-dias-wrapper, .panel-macro-30 { display: none !important; }
         }
     </style>
 </head>
@@ -330,7 +343,7 @@
         
         <div id="status-nuvem">🔄 Sincronizando com o Google Sheets...</div>
 
-        <!-- 🎯 NOVA VISÃO MACRO: PROGRESSO DOS 30 DIAS -->
+        <!-- 🎯 VISÃO MACRO: PROGRESSO DOS 30 DIAS -->
         <div class="panel-macro-30">
             <div class="macro-title">
                 <span>🏆 Progresso Geral do Objetivo</span>
@@ -339,16 +352,49 @@
             <div class="bar-macro-bg">
                 <div id="bar-macro-progresso" class="bar-macro-fill"></div>
             </div>
-            <p id="insight-falta" style="font-size: 11px; margin: 8px 0 0 0; color: var(--text-support); font-weight: 500;"></p>
+            <p id="insight-falta" style="font-size: 11px; margin: 8px 0 0 0; color: var(--text-support); font-weight: 500;">Carregando métricas macro...</p>
         </div>
 
         <button class="btn-pdf" onclick="window.print()">
             📄 Exportar Relatório (PDF)
         </button>
 
-        <!-- SELETOR DINÂMICO DE DIA (1 a 30) -->
-        <div class="nav-dias" id="barra-dias">
-            <!-- Gerado via JavaScript para economizar espaço de código -->
+        <!-- SELETOR CORRIGIDO: NAVEGAÇÃO DOS 30 DIAS -->
+        <div class="nav-dias-wrapper">
+            <div class="nav-dias-label">📅 Histórico do Desafio:</div>
+            <div class="nav-dias" id="barra-dias">
+                <!-- Botões inseridos diretamente de forma estática para garantir renderização instantânea -->
+                <button class="btn-dia active" id="btn-Dia-1" onclick="mudarDiaExibido('Dia 1')">Dia 1</button>
+                <button class="btn-dia" id="btn-Dia-2" onclick="mudarDiaExibido('Dia 2')">Dia 2</button>
+                <button class="btn-dia" id="btn-Dia-3" onclick="mudarDiaExibido('Dia 3')">Dia 3</button>
+                <button class="btn-dia" id="btn-Dia-4" onclick="mudarDiaExibido('Dia 4')">Dia 4</button>
+                <button class="btn-dia" id="btn-Dia-5" onclick="mudarDiaExibido('Dia 5')">Dia 5</button>
+                <button class="btn-dia" id="btn-Dia-6" onclick="mudarDiaExibido('Dia 6')">Dia 6</button>
+                <button class="btn-dia" id="btn-Dia-7" onclick="mudarDiaExibido('Dia 7')">Dia 7</button>
+                <button class="btn-dia" id="btn-Dia-8" onclick="mudarDiaExibido('Dia 8')">Dia 8</button>
+                <button class="btn-dia" id="btn-Dia-9" onclick="mudarDiaExibido('Dia 9')">Dia 9</button>
+                <button class="btn-dia" id="btn-Dia-10" onclick="mudarDiaExibido('Dia 10')">Dia 10</button>
+                <button class="btn-dia" id="btn-Dia-11" onclick="mudarDiaExibido('Dia 11')">Dia 11</button>
+                <button class="btn-dia" id="btn-Dia-12" onclick="mudarDiaExibido('Dia 12')">Dia 12</button>
+                <button class="btn-dia" id="btn-Dia-13" onclick="mudarDiaExibido('Dia 13')">Dia 13</button>
+                <button class="btn-dia" id="btn-Dia-14" onclick="mudarDiaExibido('Dia 14')">Dia 14</button>
+                <button class="btn-dia" id="btn-Dia-15" onclick="mudarDiaExibido('Dia 15')">Dia 15</button>
+                <button class="btn-dia" id="btn-Dia-16" onclick="mudarDiaExibido('Dia 16')">Dia 16</button>
+                <button class="btn-dia" id="btn-Dia-17" onclick="mudarDiaExibido('Dia 17')">Dia 17</button>
+                <button class="btn-dia" id="btn-Dia-18" onclick="mudarDiaExibido('Dia 18')">Dia 18</button>
+                <button class="btn-dia" id="btn-Dia-19" onclick="mudarDiaExibido('Dia 19')">Dia 19</button>
+                <button class="btn-dia" id="btn-Dia-20" onclick="mudarDiaExibido('Dia 20')">Dia 20</button>
+                <button class="btn-dia" id="btn-Dia-21" onclick="mudarDiaExibido('Dia 21')">Dia 21</button>
+                <button class="btn-dia" id="btn-Dia-22" onclick="mudarDiaExibido('Dia 22')">Dia 22</button>
+                <button class="btn-dia" id="btn-Dia-23" onclick="mudarDiaExibido('Dia 23')">Dia 23</button>
+                <button class="btn-dia" id="btn-Dia-24" onclick="mudarDiaExibido('Dia 24')">Dia 24</button>
+                <button class="btn-dia" id="btn-Dia-25" onclick="mudarDiaExibido('Dia 25')">Dia 25</button>
+                <button class="btn-dia" id="btn-Dia-26" onclick="mudarDiaExibido('Dia 26')">Dia 26</button>
+                <button class="btn-dia" id="btn-Dia-27" onclick="mudarDiaExibido('Dia 27')">Dia 27</button>
+                <button class="btn-dia" id="btn-Dia-28" onclick="mudarDiaExibido('Dia 28')">Dia 28</button>
+                <button class="btn-dia" id="btn-Dia-29" onclick="mudarDiaExibido('Dia 29')">Dia 29</button>
+                <button class="btn-dia" id="btn-Dia-30" onclick="mudarDiaExibido('Dia 30')">Dia 30</button>
+            </div>
         </div>
 
         <div class="calendar-grid">
@@ -356,7 +402,7 @@
             <!-- PAINEL DO DIA SELECIONADO -->
             <div class="day-card">
                 <div class="day-header">
-                    <span class="day-title" id="nome-dia-titulo">Selecione um dia...</span>
+                    <span class="day-title" id="nome-dia-titulo">Dia 1</span>
                 </div>
                 <div class="macro-row">
                     <div class="macro-info"><span>Proteína</span><span id="label-prot">0g / 138g (0%)</span></div>
@@ -394,7 +440,7 @@
                     </div>
                     <div class="input-group" id="grupo-nome">
                         <label>Nome da Refeição</label>
-                        <input type="text" id="nome-refeicao" placeholder="Ex: Café da manhã">
+                        <input type="text" id="nome-refeicao" placeholder="Ex: Almoço">
                     </div>
                 </div>
                 <div id="campos-refeicao">
@@ -429,13 +475,7 @@
         let bancoDadosCompleto = []; 
         const metas = { prot: 138, cal: 2200, water: 3000 };
 
-        // Inicialização rápida: Constrói a barra de 1 a 30 botões
         window.onload = function() {
-            const barra = document.getElementById('barra-dias');
-            barra.innerHTML = '';
-            for(let i = 1; i <= 30; i++) {
-                barra.innerHTML += `<button class="btn-dia" id="btn-Dia-${i}" onclick="mudarDiaExibido('Dia ${i}')">Dia ${i}</button>`;
-            }
             carregarDadosNuvem();
         };
 
@@ -480,7 +520,7 @@
 
         function processarEExibirDados() {
             let dadosFiltrados = { prot: 0, cal: 0, water: 0, refeicoes: [] };
-            let diasConcluidosSet = new Set(); // Guarda os dias únicos que têm registros relevantes
+            let diasConcluidosSet = new Set(); 
 
             bancoDadosCompleto.forEach(row => {
                 if (!row.c) return;
@@ -491,7 +531,6 @@
                 const cal = row.c[5] ? parseInt(row.c[5].v) || 0 : 0;
                 const water = row.c[6] ? parseInt(row.c[6].v) || 0 : 0;
 
-                // Padroniza o formato caso venha apenas número da planilha (ex: "1" vira "Dia 1")
                 if(!isNaN(dia) && dia !== '') { dia = `Dia ${dia}`; }
 
                 if (dia && (prot > 0 || cal > 0 || water > 0)) {
@@ -518,9 +557,9 @@
             document.getElementById('bar-macro-progresso').style.width = pctMacro + '%';
             
             if(diasRestantes > 0) {
-                document.getElementById('insight-falta').innerText = `🎯 Faltam apenas ${diasRestantes} dias para você bater sua meta de Bulking!`;
+                document.getElementById('insight-falta').innerText = `🎯 Faltam ${diasRestantes} dias para você finalizar o seu objetivo de Bulking!`;
             } else {
-                document.getElementById('insight-falta').innerText = `🏆 Parabéns! Desafio de 30 Dias concluído com sucesso!`;
+                document.getElementById('insight-falta').innerText = `🏆 Incrível! Você completou os 30 dias do objetivo!`;
             }
 
             // Atualiza Painel Diário
