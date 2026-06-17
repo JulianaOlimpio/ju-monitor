@@ -442,7 +442,10 @@ let itemParaEnviar = { dia: diaParaEnviar, tipo: tipo, nome: "-", prot: 0, cal: 
                     const cal = row.c[5] ? parseInt(row.c[5].v) || 0 : 0;
                     const water = row.c[6] ? parseInt(row.c[6].v) || 0 : 0;
 
-                    if (dia === "Terça") {
+                   const diasSemana = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+const diaAtual = diasSemana[new Date().getDay()].replace("-feira", "");
+
+if (dia === diaAtual) {
                         if (tipo === "refeicao") {
                             dadosTerca.prot += prot;
                             dadosTerca.cal += cal;
