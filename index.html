@@ -273,22 +273,6 @@
             cursor: pointer;
             margin-top: 5px;
         }
-        .btn-pdf {
-            background: #fff;
-            color: var(--primary);
-            border: 2px solid var(--primary);
-            width: 100%;
-            padding: 10px;
-            border-radius: 14px;
-            font-weight: bold;
-            font-size: 13px;
-            cursor: pointer;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
         #status-nuvem {
             text-align: center;
             font-size: 11px;
@@ -322,10 +306,6 @@
             width: 100%;
         }
         #resultado-ia { margin-top: 10px; font-size: 12px; color: #333; text-align: left; }
-
-        @media print {
-            .form-upload, .box-ia, .btn-pdf, .avatar-moderno, #status-nuvem, .nav-dias-wrapper, .panel-macro-30 { display: none !important; }
-        }
     </style>
 </head>
 <body>
@@ -343,6 +323,7 @@
         
         <div id="status-nuvem">🔄 Sincronizando com o Google Sheets...</div>
 
+        <!-- VISÃO MACRO -->
         <div class="panel-macro-30">
             <div class="macro-title">
                 <span>🏆 Progresso Geral do Objetivo</span>
@@ -354,10 +335,7 @@
             <p id="insight-falta" style="font-size: 11px; margin: 8px 0 0 0; color: var(--text-support); font-weight: 500;">Carregando métricas macro...</p>
         </div>
 
-        <button class="btn-pdf" onclick="window.print()">
-            📄 Exportar Relatório (PDF)
-        </button>
-
+        <!-- SELETOR DE DIAS -->
         <div class="nav-dias-wrapper">
             <div class="nav-dias-label">📅 Histórico do Desafio:</div>
             <div class="nav-dias" id="barra-dias">
@@ -371,25 +349,7 @@
 
         <div class="calendar-grid">
             
-            <div class="day-card">
-                <div class="day-header">
-                    <span class="day-title" id="nome-dia-titulo">Dia 1</span>
-                </div>
-                <div class="macro-row">
-                    <div class="macro-info"><span>Proteína</span><span id="label-prot">0g / 138g (0%)</span></div>
-                    <div class="bar-bg"><div id="bar-prot" class="bar-fill fill-prot"></div></div>
-                </div>
-                <div class="macro-row">
-                    <div class="macro-info"><span>Calorias</span><span id="label-cal">0 kcal / 2200 kcal (0%)</span></div>
-                    <div class="bar-bg"><div id="bar-cal" class="bar-fill fill-cal"></div></div>
-                </div>
-                <div class="macro-row">
-                    <div class="macro-info"><span>Água</span><span id="label-water">0L / 3.0L (0%)</span></div>
-                    <div class="bar-bg"><div id="bar-water" class="bar-fill fill-water"></div></div>
-                </div>
-                <div class="meal-list" id="lista-refeicoes" style="display:none;"></div>
-            </div>
-
+            <!-- ANALISADOR COM IA -->
             <div class="box-ia">
                 <h3>🤖 Analisar Prato com IA</h3>
                 <input type="file" id="foto-refeicao" accept="image/*" style="font-size: 12px; width: 100%;">
@@ -397,6 +357,7 @@
                 <div id="resultado-ia"></div>
             </div>
 
+            <!-- FORMULÁRIO -->
             <div class="form-upload">
                 <h3>🍱 Registrar para o <span id="dia-registro-label">Dia 1</span></h3>
                 <div class="input-row">
@@ -432,6 +393,29 @@
                 </div>
                 <button class="btn-submit" onclick="adicionarItem()">Lançar na Nuvem</button>
             </div>
+
+            <!-- CARD COMPARTILHADO DA EXIBIÇÃO DO DIA SELECIONADO -->
+            <div class="day-card" id="card-dia-ativo">
+                <div class="day-header">
+                    <span class="day-title" id="card-titulo-dia">Dia 1</span>
+                </div>
+                <div class="macro-row">
+                    <div class="macro-info"><span>Proteína</span><span id="txt-prot">0g / 138g (0%)</span></div>
+                    <div class="bar-bg"><div id="bar-prot" class="bar-fill fill-prot"></div></div>
+                </div>
+                <div class="macro-row">
+                    <div class="macro-info"><span>Calorias</span><span id="txt-cal">0 kcal / 2200 kcal (0%)</span></div>
+                    <div class="bar-bg"><div id="bar-cal" class="bar-fill fill-cal"></div></div>
+                </div>
+                <div class="macro-row">
+                    <div class="macro-info"><span>Água</span><span id="txt-water">0.0L / 3.0L (0%)</span></div>
+                    <div class="bar-bg"><div id="bar-water" class="bar-fill fill-water"></div></div>
+                </div>
+                <div class="meal-list" id="card-lista-refeicoes" style="display: none;">
+                    <!-- Itens inseridos dinamicamente -->
+                </div>
+            </div>
+
         </div>
     </div>
 
@@ -458,6 +442,8 @@
             if(btnAtivo) btnAtivo.classList.add('active');
 
             document.getElementById('dia-registro-label').innerText = dia;
+            document.getElementById('card-titulo-dia').innerText = dia;
+
             processarEExibirDados();
         }
 
@@ -505,37 +491,36 @@
         }
 
         function processarEExibirDados() {
-            let dadosFiltrados = { prot: 0, cal: 0, water: 0, refeicoes: [] };
+            let diasConcluidosSet = new Set();
             let datasUnicasOrdenadas = [];
 
-            // 1. Extrai as datas únicas no formato string para ordenar de forma cronológica estável
             linhasPlanilha.forEach(colunas => {
                 if (!colunas || colunas.length === 0 || !colunas[0]) return;
-                let dataLimpa = colunas[0].split(' ')[0]; // obtém apenas "DD/MM/AAAA"
+                let dataLimpa = colunas[0].split(' ')[0];
                 if (dataLimpa && !datasUnicasOrdenadas.includes(dataLimpa) && dataLimpa.includes('/')) {
                     datasUnicasOrdenadas.push(dataLimpa);
                 }
             });
 
-            // 2. Ordena as datas corretamente (Evita bugs se as linhas vierem desalinhadas por horário)
             datasUnicasOrdenadas.sort((a, b) => {
                 const pA = a.split('/'); const pB = b.split('/');
                 return new Date(pA[2], pA[1]-1, pA[0]) - new Date(pB[2], pB[1]-1, pB[0]);
             });
 
-            // 3. Cria o mapeamento rigoroso: data estável -> Dia do Desafio
             let mapeamentoDias = {};
             datasUnicasOrdenadas.forEach((dataStr, index) => {
                 mapeamentoDias[dataStr] = `Dia ${index + 1}`;
             });
 
-            let diasConcluidosSet = new Set();
+            let acumuladoDiaAtivo = { prot: 0, cal: 0, water: 0, refeicoes: [] };
 
             linhasPlanilha.forEach(colunas => {
                 if (!colunas || colunas.length < 3 || !colunas[0]) return;
                 
                 let dataLimpa = colunas[0].split(' ')[0];
-                let diaDoCard = mapeamentoDias[dataLimpa];
+                let diaCorrespondente = mapeamentoDias[dataLimpa];
+
+                if (!diaCorrespondente) return;
 
                 const tipo = colunas[2] || '';
                 const nome = colunas[3] || '-';
@@ -544,20 +529,21 @@
                 const water = parseInt(colunas[6]) || 0;
 
                 if (prot > 0 || cal > 0 || water > 0) {
-                    diasConcluidosSet.add(diaDoCard);
+                    diasConcluidosSet.add(diaCorrespondente);
                 }
 
-                if (diaDoCard === diaSelecionado) {
+                if (diaCorrespondente === diaSelecionado) {
                     if (tipo.toLowerCase() === "refeicao") {
-                        dadosFiltrados.prot += prot;
-                        dadosFiltrados.cal += cal;
-                        dadosFiltrados.refeicoes.push({ nome: nome, prot: prot, cal: cal });
+                        acumuladoDiaAtivo.prot += prot;
+                        acumuladoDiaAtivo.cal += cal;
+                        acumuladoDiaAtivo.refeicoes.push({ nome: nome, prot: prot, cal: cal });
                     } else if (tipo.toLowerCase() === "agua") {
-                        dadosFiltrados.water += water;
+                        acumuladoDiaAtivo.water += water;
                     }
                 }
             });
 
+            // Atualiza painel macro superior
             const totalDiasFeitos = diasConcluidosSet.size;
             const pctMacro = Math.min(Math.round((totalDiasFeitos / 30) * 100), 100);
             const diasRestantes = 30 - totalDiasFeitos;
@@ -571,29 +557,31 @@
                 document.getElementById('insight-falta').innerText = `🏆 Incrível! Você completou os 30 dias do objetivo!`;
             }
 
-            document.getElementById('nome-dia-titulo').innerText = diaSelecionado;
+            // Atualiza o Card Visual do dia selecionado
+            const pctProt = Math.min(Math.round((acumuladoDiaAtivo.prot / metas.prot) * 100), 100);
+            const pctCal = Math.min(Math.round((acumuladoDiaAtivo.cal / metas.cal) * 100), 100);
+            const pctWater = Math.min(Math.round((acumuladoDiaAtivo.water / metas.water) * 100), 100);
 
-            const pctProt = Math.min(Math.round((dadosFiltrados.prot / metas.prot) * 100), 100);
-            const pctCal = Math.min(Math.round((dadosFiltrados.cal / metas.cal) * 100), 100);
-            const pctWater = Math.min(Math.round((dadosFiltrados.water / metas.water) * 100), 100);
-
-            document.getElementById('label-prot').innerText = `${dadosFiltrados.prot}g / ${metas.prot}g (${pctProt}%)`;
-            document.getElementById('label-cal').innerText = `${dadosFiltrados.cal} kcal / ${metas.cal} kcal (${pctCal}%)`;
-            document.getElementById('label-water').innerText = `${(dadosFiltrados.water / 1000).toFixed(1)}L / 3.0L (${pctWater}%)`;
-
+            document.getElementById('txt-prot').innerText = `${acumuladoDiaAtivo.prot}g / ${metas.prot}g (${pctProt}%)`;
             document.getElementById('bar-prot').style.width = pctProt + '%';
+
+            document.getElementById('txt-cal').innerText = `${acumuladoDiaAtivo.cal} kcal / ${metas.cal} kcal (${pctCal}%)`;
             document.getElementById('bar-cal').style.width = pctCal + '%';
+
+            document.getElementById('txt-water').innerText = `${(acumuladoDiaAtivo.water / 1000).toFixed(1)}L / 3.0L (${pctWater}%)`;
             document.getElementById('bar-water').style.width = pctWater + '%';
 
-            const lista = document.getElementById('lista-refeicoes');
-            if (dadosFiltrados.refeicoes.length > 0) {
-                lista.style.display = 'block';
-                lista.innerHTML = '';
-                dadosFiltrados.refeicoes.forEach(item => {
-                    lista.innerHTML += `<div class="meal-item"><span><b>${item.nome}:</b> ${item.prot}g P | ${item.cal} kcal</span></div>`;
+            const listaRefeicoesDiv = document.getElementById('card-lista-refeicoes');
+            if (acumuladoDiaAtivo.refeicoes.length > 0) {
+                listaRefeicoesDiv.style.display = 'block';
+                let htmlRefes = '';
+                acumuladoDiaAtivo.refeicoes.forEach(item => {
+                    htmlRefes += `<div class="meal-item"><span><b>${item.nome}:</b> ${item.prot}g P | ${item.cal} kcal</span></div>`;
                 });
+                listaRefeicoesDiv.innerHTML = htmlRefes;
             } else {
-                lista.style.display = 'none';
+                listaRefeicoesDiv.style.display = 'none';
+                listaRefeicoesDiv.innerHTML = '';
             }
         }
 
@@ -638,83 +626,64 @@
             });
         }
 
-     async function analisarPratoComIA() {
-    const arquivoInput = document.getElementById('foto-refeicao');
-    const resultadoDiv = document.getElementById('resultado-ia');
-    const btn = document.getElementById('btn-analisar');
+        async function analisarPratoComIA() {
+            const arquivoInput = document.getElementById('foto-refeicao');
+            const resultadoDiv = document.getElementById('resultado-ia');
+            const btn = document.getElementById('btn-analisar');
 
-    if (!arquivoInput.files || arquivoInput.files.length === 0) {
-        alert('Por favor, selecione ou tire uma foto primeiro!');
-        return;
-    }
-
-    const arquivo = arquivoInput.files[0];
-    resultadoDiv.innerHTML = "⏳ IA analisando a imagem... Aguarde.";
-    btn.disabled = true;
-
-    try {
-        const reader = new FileReader();
-        reader.readAsDataURL(arquivo);
-        reader.onloadend = async () => {
-            const base64Data = reader.result.split(',')[1];
-            const mimeType = arquivo.type;
-            const urlGemini = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
-            
-            // Estrutura de dados corrigida perfeitamente aqui:
-            const dadosEnvio = {
-                contents: [{
-                    parts: [
-                        { 
-                            text: "Analise esta imagem de comida. Estime as proteínas em gramas (apenas o número inteiro) e as calorias em kcal (apenas o número inteiro). Dê um nome curto para o prato. Retorne estritamente um JSON no seguinte formato: {\"nome\": \"Nome\", \"prot\": 30, \"cal\": 450}" 
-                        },
-                        { 
-                            inlineData: { 
-                                mimeType: mimeType, 
-                                data: base64Data 
-                            } 
-                        }
-                    ]
-                }]
-            };
-
-            const resposta = await fetch(urlGemini, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(dadosEnvio)
-            });
-
-            const jsonResposta = await resposta.json();
-            
-            // Validação de segurança para ler a resposta da API sem quebrar o código
-            if (jsonResposta.candidates && jsonResposta.candidates[0] && jsonResposta.candidates[0].content && jsonResposta.candidates[0].content.parts[0]) {
-                let textoResultado = jsonResposta.candidates[0].content.parts[0].text;
-                
-                // Limpa marcações de markdown do JSON caso a IA envie
-                textoResultado = textoResultado.replace(/```json/g, '').replace(/
-```/g, '').trim();
-                
-                const dadosComida = JSON.parse(textoResultado);
-
-                resultadoDiv.innerHTML = `
-                    <div style="border: 1px solid var(--primary); padding: 10px; border-radius: 10px; background: #fff; margin-top: 10px; font-size: 12px;">
-                        <b>Prato:</b> ${dadosComida.nome}<br>
-                        <b>Proteínas:</b> ${dadosComida.prot}g<br>
-                        <b>Calorias:</b> ${dadosComida.cal} kcal<br>
-                        <button class="btn-submit" style="background:#28a745; margin-top:8px; padding:6px;" onclick="salvarRefeicaoIA('${dadosComida.nome}', ${dadosComida.prot}, ${dadosComida.cal})">✅ Confirmar e Salvar no ${diaSelecionado}</button>
-                    </div>
-                `;
-            } else {
-                console.error("Resposta inesperada do Gemini:", jsonResposta);
-                resultadoDiv.innerHTML = "❌ Ocorreu um erro ao processar a resposta da IA. Detalhes no console.";
+            if (!arquivoInput.files || arquivoInput.files.length === 0) {
+                alert('Por favor, selecione ou tire uma foto primeiro!');
+                return;
             }
-            btn.disabled = false;
-        };
-    } catch (erro) {
-        console.error("Erro na função analisarPratoComIA:", erro);
-        resultadoDiv.innerHTML = "❌ Erro ao carregar ou ler o arquivo de imagem.";
-        btn.disabled = false;
-    }
-}
+
+            const arquivo = arquivoInput.files[0];
+            resultadoDiv.innerHTML = "⏳ IA analisando a imagem... Aguarde.";
+            btn.disabled = true;
+
+            try {
+                const reader = new FileReader();
+                reader.readAsDataURL(arquivo);
+                reader.onloadend = async () => {
+                    const base64Data = reader.result.split(',')[1];
+                    const mimeType = arquivo.type;
+                    const urlGemini = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+                    
+                    const dadosEnvio = {
+                        contents: [{
+                            parts: [
+                                { text: "Analise esta imagem de comida. Estime as proteínas em gramas (apenas o número inteiro) e as calorias em kcal (apenas o número inteiro). Dê um nome curto para o prato. Retorne estritamente um JSON no seguinte formato: {\"nome\": \"Nome\", \"prot\": 30, \"cal\": 450}" }
+                            , { inlineData: { mimeType: mimeType, data: base64Data } }]
+                        }]
+                    };
+
+                    const resposta = await fetch(urlGemini, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(dadosEnvio)
+                    });
+
+                    const jsonResposta = await resposta.json();
+                    let textoResultado = jsonResposta.candidates[0].content.parts[0].text;
+                    textoResultado = textoResultado.replace(/```json/g, '').replace(/
+```/g, '').trim();
+                    const dadosComida = JSON.parse(textoResultado);
+
+                    resultadoDiv.innerHTML = `
+                        <div style="border: 1px solid var(--primary); padding: 10px; border-radius: 10px; background: #fff; margin-top: 10px; font-size: 12px;">
+                            <b>Prato:</b> ${dadosComida.nome}<br>
+                            <b>Proteínas:</b> ${dadosComida.prot}g<br>
+                            <b>Calorias:</b> ${dadosComida.cal} kcal<br>
+                            <button class="btn-submit" style="background:#28a745; margin-top:8px; padding:6px;" onclick="salvarRefeicaoIA('${dadosComida.nome}', ${dadosComida.prot}, ${dadosComida.cal})">✅ Confirmar e Salvar no ${diaSelecionado}</button>
+                        </div>
+                    `;
+                    btn.disabled = false;
+                };
+            } catch (erro) {
+                console.error(erro);
+                resultadoDiv.innerHTML = "❌ Erro ao analisar imagem.";
+                btn.disabled = false;
+            }
+        }
 
         function salvarRefeicaoIA(nome, prot, cal) {
             document.getElementById('status-nuvem').innerText = "⏳ Salvando dados da IA no Google Sheets...";
