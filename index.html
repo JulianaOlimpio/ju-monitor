@@ -236,10 +236,40 @@
             margin-bottom: 10px;
             font-weight: bold;
         }
+        .box-ia {
+            background: #fff0f5;
+            border: 2px dashed var(--primary);
+            padding: 15px;
+            border-radius: 18px;
+            margin-bottom: 20px;
+            text-align: center;
+            box-shadow: 0 6px 15px rgba(255, 102, 163, 0.05);
+        }
+        .box-ia h3 {
+            margin-top: 0;
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: var(--primary);
+        }
+        .btn-ia {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 10px;
+            width: 100%;
+            font-size: 13px;
+        }
+        .btn-ia:disabled { background-color: #ccc; }
+        #resultado-ia { margin-top: 10px; font-size: 12px; color: #333; text-align: left; }
+
         @media print {
             body { background: #fff; padding: 0; }
             .container { box-shadow: none; max-width: 100%; width: 100%; padding: 0; }
-            .form-upload, .btn-pdf, .day-card.empty, .avatar-moderno, #status-nuvem { display: none !important; }
+            .form-upload, .box-ia, .btn-pdf, .day-card.empty, .avatar-moderno, #status-nuvem { display: none !important; }
             .day-card { page-break-inside: avoid; border: 1px solid #ccc !important; margin-bottom: 20px; }
         }
     </style>
@@ -265,35 +295,10 @@
 
         <div class="calendar-grid">
             
-            <!-- DIA 01: SEGUNDA (CONCLUÍDO ESTÁTICO) -->
-            <div class="day-card">
-                <div class="day-header">
-                    <span class="day-title">Segunda (Dia 01)</span>
-                    <span class="day-badge">CONCLUÍDO</span>
-                </div>
-                <div class="macro-row">
-                    <div class="macro-info"><span>Proteína</span><span>89g / 138g (64%)</span></div>
-                    <div class="bar-bg"><div class="bar-fill fill-prot" style="width: 64%;"></div></div>
-                </div>
-                <div class="macro-row">
-                    <div class="macro-info"><span>Calorias</span><span>1640 kcal / 2200 kcal (74%)</span></div>
-                    <div class="bar-bg"><div class="bar-fill fill-cal" style="width: 74%;"></div></div>
-                </div>
-                <div class="macro-row">
-                    <div class="macro-info"><span>Água</span><span>1.5L / 3.0L (50%)</span></div>
-                    <div class="bar-bg"><div class="bar-fill fill-water" style="width: 50%;"></div></div>
-                </div>
-                <div class="meal-list">
-                    <div class="meal-item"><span><b>Café + Manhã:</b></span><span>19g Prot | 480 kcal</span></div>
-                    <div class="meal-item"><span><b>Almoço:</b></span><span>36g Prot | 690 kcal</span></div>
-                    <div class="meal-item"><span><b>Lanches + Janta:</b></span><span>34g Prot | 470 kcal</span></div>
-                </div>
-            </div>
-
-            <!-- DIA 02: TERÇA (CONECTADO NA NUVEM) -->
+            <!-- PAINEL DINÂMICO (Muda o título automaticamente conforme o dia) -->
             <div class="day-card active-day" id="terca-card">
                 <div class="day-header">
-                    <span class="day-title">Terça (Dia 02)</span>
+                    <span class="day-title" id="nome-dia-titulo">Carregando Dia...</span>
                     <span class="day-badge" style="background: #5cb85c;">HOJE</span>
                 </div>
                 <div class="macro-row">
@@ -311,7 +316,16 @@
                 <div class="meal-list" id="lista-refeicoes-terca" style="display:none;"></div>
             </div>
 
-            <!-- FORMULÁRIO DE LANÇAMENTO -->
+            <!-- NOVO BLOCO: ANÁLISE POR FOTO COM IA -->
+            <div class="box-ia">
+                <h3>🤖 Analisar Prato com IA</h3>
+                <p style="font-size: 11px; color: #666; margin: 0 0 10px 0;">Tire uma foto ou envie uma imagem do seu prato</p>
+                <input type="file" id="foto-refeicao" accept="image/*" style="font-size: 12px; width: 100%;">
+                <button class="btn-ia" id="btn-analisar" onclick="analisarPratoComIA()">🔍 Analisar com Gemini IA</button>
+                <div id="resultado-ia"></div>
+            </div>
+
+            <!-- FORMULÁRIO DE LANÇAMENTO MANUAL -->
             <div class="form-upload">
                 <h3 id="form-title">🍱 Registrar Alimento / Água</h3>
                 <div class="input-row">
@@ -324,7 +338,7 @@
                     </div>
                     <div class="input-group" id="grupo-nome">
                         <label>Nome da Refeição</label>
-                        <input type="text" id="nome-refeicao" placeholder="Ex: Almoço Terça">
+                        <input type="text" id="nome-refeicao" placeholder="Ex: Almoço">
                     </div>
                 </div>
                 <div id="campos-refeicao">
@@ -351,21 +365,23 @@
     </div>
 
     <script>
- 
-// 1. LINK DO SEU APPS SCRIPT
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxQhGsF8_GJztqLiGldJJsEsvbga5yMJEabrj-_wZ6GHCfq2ojxAo_zgCtA311XYiPDtw/exec';
-        
-// 2. ID DA SUA PLANILHA GOOGLE
-const SCRIPT_ID = '1IQ4lgm2ddNbx4lFYRcAsu9eugq6_LhrwuY7fCiNYVr4';
+        // 1. LINK DO SEU APPS SCRIPT
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxQhGsF8_GJztqLiGldJJsEsvbga5yMJEabrj-_wZ6GHCfq2ojxAo_zgCtA311XYiPDtw/exec';
+                
+        // 2. ID DA SUA PLANILHA GOOGLE
+        const SCRIPT_ID = '1IQ4lgm2ddNbx4lFYRcAsu9eugq6_LhrwuY7fCiNYVr4';
 
-// O restante do seu código JavaScript do monitor deve continuar abaixo...
-
-        
+        // 3. SUA CHAVE DA API DO GEMINI (Substitua pela sua chave obtida no Google AI Studio)
+        const GEMINI_API_KEY = 'SUA_CHAVE_GEMINI_AQUI';
 
         let dadosTerca = { prot: 0, cal: 0, water: 0, refeicoes: [] };
         const metas = { prot: 138, cal: 2200, water: 3000 };
+        
+        const diasSemana = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+        const diaAtual = diasSemana[new Date().getDay()];
 
         window.onload = function() {
+            document.getElementById('nome-dia-titulo').innerText = `${diaAtual} (Hoje)`;
             carregarDadosNuvem();
         };
 
@@ -376,13 +392,9 @@ const SCRIPT_ID = '1IQ4lgm2ddNbx4lFYRcAsu9eugq6_LhrwuY7fCiNYVr4';
             document.getElementById('campos-agua').style.display = tipo === 'agua' ? 'block' : 'none';
         }
 
-       // Descobre o dia da semana atual em português (ex: "Terça-feira", "Quarta-feira")
-const diasSemana = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
-const diaAtualCompleto = diasSemana[new Date().getDay()]; 
-// Se na sua planilha usa apenas "Terça", "Quarta" (sem o "-feira"), mantemos assim:
-const diaParaEnviar = diaAtualCompleto.replace("-feira", "");
-
-let itemParaEnviar = { dia: diaParaEnviar, tipo: tipo, nome: "-", prot: 0, cal: 0, water: 0 };
+        function adicionarItem() {
+            const tipo = document.getElementById('tipo-registro').value;
+            let itemParaEnviar = { dia: diaAtual, tipo: tipo, nome: "-", prot: 0, cal: 0, water: 0 };
 
             if (tipo === 'refeicao') {
                 const nome = document.getElementById('nome-refeicao').value || 'Refeição';
@@ -410,7 +422,6 @@ let itemParaEnviar = { dia: diaParaEnviar, tipo: tipo, nome: "-", prot: 0, cal: 
                 document.getElementById('input-prot').value = '';
                 document.getElementById('input-cal').value = '';
                 document.getElementById('input-agua').value = '';
-                // Aguarda 1.5 segundos para o Google processar e recarrega
                 setTimeout(carregarDadosNuvem, 1500);
             })
             .catch(err => {
@@ -420,13 +431,11 @@ let itemParaEnviar = { dia: diaParaEnviar, tipo: tipo, nome: "-", prot: 0, cal: 
         }
 
         function carregarDadosNuvem() {
-            // Usa a API pública de planilhas do Google (Leitura instantânea sem bloqueios)
             const urlLeitura = `https://docs.google.com/spreadsheets/d/${SCRIPT_ID}/gviz/tq?tqx=out:json`;
 
             fetch(urlLeitura)
             .then(res => res.text())
             .then(data => {
-                // Remove a proteção de dados que o Google envia no JSON
                 const jsonString = data.substring(47, data.length - 2);
                 const json = JSON.parse(jsonString);
                 const rows = json.table.rows;
@@ -434,7 +443,7 @@ let itemParaEnviar = { dia: diaParaEnviar, tipo: tipo, nome: "-", prot: 0, cal: 
                 dadosTerca = { prot: 0, cal: 0, water: 0, refeicoes: [] };
 
                 rows.forEach(row => {
-                    // Mapeia as colunas: B (Dia), C (Tipo), D (Nome), E (Proteína), F (Caloria), G (Água)
+                    if (!row.c) return;
                     const dia = row.c[1] ? row.c[1].v : '';
                     const tipo = row.c[2] ? row.c[2].v : '';
                     const nome = row.c[3] ? row.c[3].v : '-';
@@ -442,10 +451,7 @@ let itemParaEnviar = { dia: diaParaEnviar, tipo: tipo, nome: "-", prot: 0, cal: 
                     const cal = row.c[5] ? parseInt(row.c[5].v) || 0 : 0;
                     const water = row.c[6] ? parseInt(row.c[6].v) || 0 : 0;
 
-                   const diasSemana = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
-const diaAtual = diasSemana[new Date().getDay()].replace("-feira", "");
-
-if (dia === diaAtual) {
+                    if (dia === diaAtual) {
                         if (tipo === "refeicao") {
                             dadosTerca.prot += prot;
                             dadosTerca.cal += cal;
@@ -488,6 +494,89 @@ if (dia === diaAtual) {
             } else {
                 lista.style.display = 'none';
             }
+        }
+
+        // --- FUNÇÕES DA INTELIGÊNCIA ARTIFICIAL (GEMINI) ---
+        async function analisarPratoComIA() {
+            const arquivoInput = document.getElementById('foto-refeicao');
+            const resultadoDiv = document.getElementById('resultado-ia');
+            const btn = document.getElementById('btn-analisar');
+
+            if (!arquivoInput.files || arquivoInput.files.length === 0) {
+                alert('Por favor, selecione ou tire uma foto primeiro!');
+                return;
+            }
+            if (GEMINI_API_KEY === 'SUA_CHAVE_GEMINI_AQUI') {
+                alert('Você precisa colocar sua chave API do Gemini no código (Linha 147)!');
+                return;
+            }
+
+            const arquivo = arquivoInput.files[0];
+            resultadoDiv.innerHTML = "⏳ IA analisando a imagem... Aguarde.";
+            btn.disabled = true;
+
+            try {
+                const reader = new FileReader();
+                reader.readAsDataURL(arquivo);
+                reader.onloadend = async () => {
+                    const base64Data = reader.result.split(',')[1];
+                    const mimeType = arquivo.type;
+                    const urlGemini = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+                    
+                    const dadosEnvio = {
+                        contents: [{
+                            parts: [
+                                { text: "Analise esta imagem de comida. Estime as proteínas em gramas (apenas o número inteiro) e as calorias em kcal (apenas o número inteiro). Dê um nome curto para o prato. Retorne estritamente um JSON no seguinte formato, sem formatação markdown: {\"nome\": \"Nome do Prato\", \"prot\": 30, \"cal\": 450}" },
+                                { inlineData: { mimeType: mimeType, data: base64Data } }
+                            ]
+                        }]
+                    };
+
+                    const resposta = await fetch(urlGemini, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(dadosEnvio)
+                    });
+
+                    const jsonResposta = await resposta.json();
+                    let textoResultado = jsonResposta.candidates[0].content.parts[0].text;
+                    textoResultado = textoResultado.replace(/```json/g, '').replace(/
+```/g, '').trim();
+                    const dadosComida = JSON.parse(textoResultado);
+
+                    resultadoDiv.innerHTML = `
+                        <div style="border: 1px solid var(--primary); padding: 10px; border-radius: 10px; background: #fff; margin-top: 10px; font-size: 12px;">
+                            <b>Prato:</b> ${dadosComida.nome}<br>
+                            <b>Proteínas:</b> ${dadosComida.prot}g<br>
+                            <b>Calorias:</b> ${dadosComida.cal} kcal<br>
+                            <button class="btn-submit" style="background:#28a745; margin-top:8px; padding:6px;" onclick="salvarRefeicaoIA('${dadosComida.nome}', ${dadosComida.prot}, ${dadosComida.cal})">✅ Confirmar e Salvar</button>
+                        </div>
+                    `;
+                    btn.disabled = false;
+                };
+            } catch (erro) {
+                console.error(erro);
+                resultadoDiv.innerHTML = "❌ Erro ao analisar imagem.";
+                btn.disabled = false;
+            }
+        }
+
+        function salvarRefeicaoIA(nome, prot, cal) {
+            document.getElementById('status-nuvem').innerText = "⏳ Salvando dados da IA no Google Sheets...";
+            let itemParaEnviar = { dia: diaAtual, tipo: "refeicao", nome: nome, prot: parseInt(prot), cal: parseInt(cal), water: 0 };
+
+            fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify(itemParaEnviar)
+            })
+            .then(() => {
+                document.getElementById('resultado-ia').innerHTML = "✅ Salvo com sucesso!";
+                setTimeout(carregarDadosNuvem, 1500);
+            })
+            .catch(err => {
+                console.error(err);
+                document.getElementById('status-nuvem').innerText = "❌ Erro ao salvar dados.";
+            });
         }
     </script>
 </body>
