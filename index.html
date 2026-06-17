@@ -647,55 +647,74 @@
         alert('Por favor, selecione ou tire uma foto primeiro!');
         return;
     }
+
+    const arquivo = arquivoInput.files[0];
+    resultadoDiv.innerHTML = "⏳ IA analisando a imagem... Aguarde.";
+    btn.disabled = true;
+
+    try {
+        const reader = new FileReader();
+        reader.readAsDataURL(arquivo);
+        reader.onloadend = async () => {
+            const base64Data = reader.result.split(',')[1];
+            const mimeType = arquivo.type;
+            const urlGemini = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
             
+            // Estrutura de dados corrigida perfeitamente aqui:
+            const dadosEnvio = {
+                contents: [{
+                    parts: [
+                        { 
+                            text: "Analise esta imagem de comida. Estime as proteínas em gramas (apenas o número inteiro) e as calorias em kcal (apenas o número inteiro). Dê um nome curto para o prato. Retorne estritamente um JSON no seguinte formato: {\"nome\": \"Nome\", \"prot\": 30, \"cal\": 450}" 
+                        },
+                        { 
+                            inlineData: { 
+                                mimeType: mimeType, 
+                                data: base64Data 
+                            } 
+                        }
+                    ]
+                }]
+            };
 
-            const arquivo = arquivoInput.files[0];
-            resultadoDiv.innerHTML = "⏳ IA analisando a imagem... Aguarde.";
-            btn.disabled = true;
+            const resposta = await fetch(urlGemini, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(dadosEnvio)
+            });
 
-            try {
-                const reader = new FileReader();
-                reader.readAsDataURL(arquivo);
-                reader.onloadend = async () => {
-                    const base64Data = reader.result.split(',')[1];
-                    const mimeType = arquivo.type;
-                    const urlGemini = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
-                    
-                    const dadosEnvio = {
-                        contents: [{
-                            parts: [
-                                { text: "Analise esta imagem de comida. Estime as proteínas em gramas (apenas o número inteiro) e as calorias em kcal (apenas o número inteiro). Dê um nome curto para o prato. Retorne estritamente um JSON no seguinte formato: {\"nome\": \"Nome\", \"prot\": 30, \"cal\": 450}" }
-                            , { inlineData: { mimeType: mimeType, data: base64Data } }]
-                        }]
-                    };
+            const jsonResposta = await resposta.json();
+            
+            // Validação de segurança para ler a resposta da API sem quebrar o código
+            if (jsonResposta.candidates && jsonResposta.candidates[0] && jsonResposta.candidates[0].content && jsonResposta.candidates[0].content.parts[0]) {
+                let textoResultado = jsonResposta.candidates[0].content.parts[0].text;
+                
+                // Limpa marcações de markdown do JSON caso a IA envie
+                textoResultado = textoResultado.replace(/```json/g, '').replace(/
+```/g, '').trim();
+                
+                const dadosComida = JSON.parse(textoResultado);
 
-                    const resposta = await fetch(urlGemini, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(dadosEnvio)
-                    });
-
-                    const jsonResposta = await resposta.json();
-                    let textoResultado = jsonResposta.candidates[0].content.parts[0].text;
-                    textoResultado = textoResultado.replace(/```json/g, '').replace(/```/g, '').trim();
-                    const dadosComida = JSON.parse(textoResultado);
-
-                    resultadoDiv.innerHTML = `
-                        <div style="border: 1px solid var(--primary); padding: 10px; border-radius: 10px; background: #fff; margin-top: 10px; font-size: 12px;">
-                            <b>Prato:</b> ${dadosComida.nome}<br>
-                            <b>Proteínas:</b> ${dadosComida.prot}g<br>
-                            <b>Calorias:</b> ${dadosComida.cal} kcal<br>
-                            <button class="btn-submit" style="background:#28a745; margin-top:8px; padding:6px;" onclick="salvarRefeicaoIA('${dadosComida.nome}', ${dadosComida.prot}, ${dadosComida.cal})">✅ Confirmar e Salvar no ${diaSelecionado}</button>
-                        </div>
-                    `;
-                    btn.disabled = false;
-                };
-            } catch (erro) {
-                console.error(erro);
-                resultadoDiv.innerHTML = "❌ Erro ao analisar imagem.";
-                btn.disabled = false;
+                resultadoDiv.innerHTML = `
+                    <div style="border: 1px solid var(--primary); padding: 10px; border-radius: 10px; background: #fff; margin-top: 10px; font-size: 12px;">
+                        <b>Prato:</b> ${dadosComida.nome}<br>
+                        <b>Proteínas:</b> ${dadosComida.prot}g<br>
+                        <b>Calorias:</b> ${dadosComida.cal} kcal<br>
+                        <button class="btn-submit" style="background:#28a745; margin-top:8px; padding:6px;" onclick="salvarRefeicaoIA('${dadosComida.nome}', ${dadosComida.prot}, ${dadosComida.cal})">✅ Confirmar e Salvar no ${diaSelecionado}</button>
+                    </div>
+                `;
+            } else {
+                console.error("Resposta inesperada do Gemini:", jsonResposta);
+                resultadoDiv.innerHTML = "❌ Ocorreu um erro ao processar a resposta da IA. Detalhes no console.";
             }
-        }
+            btn.disabled = false;
+        };
+    } catch (erro) {
+        console.error("Erro na função analisarPratoComIA:", erro);
+        resultadoDiv.innerHTML = "❌ Erro ao carregar ou ler o arquivo de imagem.";
+        btn.disabled = false;
+    }
+}
 
         function salvarRefeicaoIA(nome, prot, cal) {
             document.getElementById('status-nuvem').innerText = "⏳ Salvando dados da IA no Google Sheets...";
