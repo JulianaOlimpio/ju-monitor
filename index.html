@@ -474,9 +474,10 @@
         }
 
         function carregarDadosNuvem() {
-            const urlCSV = `https://docs.google.com/spreadsheets/d/${SCRIPT_ID}/pub?output=csv&gid=0`;
+            // Nova URL com tqx=out:csv ignora restrições do CORS e funciona diretamente no navegador
+            const urlBypassCORS = `https://docs.google.com/spreadsheets/d/${SCRIPT_ID}/gviz/tq?tqx=out:csv`;
 
-            fetch(urlCSV)
+            fetch(urlBypassCORS)
             .then(res => res.text())
             .then(csvTexto => {
                 linhasPlanilha = parseCSV(csvTexto);
@@ -494,7 +495,6 @@
             let result = [];
             for (let i = 1; i < lines.length; i++) {
                 if (!lines[i]) continue;
-                // Regex para separar por vírgulas considerando possíveis aspas do Sheets
                 let cells = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
                 result.push(cells.map(c => c.replace(/^"|"$/g, '').trim()));
             }
@@ -506,7 +506,6 @@
             let mapeamentoDias = {};
             let contadorDias = 1;
 
-            // Ordena e limpa a data tirando a hora para agrupar corretamente
             linhasPlanilha.forEach(colunas => {
                 if (!colunas[0]) return;
                 let dataLimpa = colunas[0].split(' ')[0]; 
