@@ -77,7 +77,7 @@
             margin-bottom: 15px;
         }
 
-        /* PAINEL MACRO - DESAFIO 30 DIAS */
+        /* PAINEL MACRO */
         .panel-macro-30 {
             background: linear-gradient(135deg, #fff5f8 0%, #fff0f5 100%);
             border: 2px dashed var(--primary);
@@ -343,7 +343,7 @@
         
         <div id="status-nuvem">🔄 Sincronizando com o Google Sheets...</div>
 
-        <!-- 🎯 VISÃO MACRO: PROGRESSO DOS 30 DIAS -->
+        <!-- VISÃO MACRO -->
         <div class="panel-macro-30">
             <div class="macro-title">
                 <span>🏆 Progresso Geral do Objetivo</span>
@@ -359,7 +359,7 @@
             📄 Exportar Relatório (PDF)
         </button>
 
-        <!-- SELETOR: NAVEGAÇÃO DOS 30 DIAS -->
+        <!-- SELETOR DE DIAS -->
         <div class="nav-dias-wrapper">
             <div class="nav-dias-label">📅 Histórico do Desafio:</div>
             <div class="nav-dias" id="barra-dias">
@@ -373,7 +373,7 @@
 
         <div class="calendar-grid">
             
-            <!-- PAINEL DO DIA SELECIONADO -->
+            <!-- PAINEL DO DIA -->
             <div class="day-card">
                 <div class="day-header">
                     <span class="day-title" id="nome-dia-titulo">Dia 1</span>
@@ -401,7 +401,7 @@
                 <div id="resultado-ia"></div>
             </div>
 
-            <!-- FORMULÁRIO DE LANÇAMENTO -->
+            <!-- FORMULÁRIO -->
             <div class="form-upload">
                 <h3>🍱 Registrar para o <span id="dia-registro-label">Dia 1</span></h3>
                 <div class="input-row">
@@ -474,8 +474,7 @@
         }
 
         function carregarDadosNuvem() {
-            // Nova estratégia: leitura estável via CSV publicado
-            const urlCSV = `https://docs.google.com/spreadsheets/d/${SCRIPT_ID}/pub?output=csv`;
+            const urlCSV = `https://docs.google.com/spreadsheets/d/${SCRIPT_ID}/pub?output=csv&gid=0`;
 
             fetch(urlCSV)
             .then(res => res.text())
@@ -490,12 +489,12 @@
             });
         }
 
-        // Conversor seguro de CSV para Array
         function parseCSV(text) {
             let lines = text.split(/\r\n|\n/);
             let result = [];
             for (let i = 1; i < lines.length; i++) {
                 if (!lines[i]) continue;
+                // Regex para separar por vírgulas considerando possíveis aspas do Sheets
                 let cells = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
                 result.push(cells.map(c => c.replace(/^"|"$/g, '').trim()));
             }
@@ -504,14 +503,13 @@
 
         function processarEExibirDados() {
             let dadosFiltrados = { prot: 0, cal: 0, water: 0, refeicoes: [] };
-            
             let mapeamentoDias = {};
             let contadorDias = 1;
 
-            // 1º Passo: Mapear as datas únicas reais presentes na planilha para sequenciar Dia 1, Dia 2...
+            // Ordena e limpa a data tirando a hora para agrupar corretamente
             linhasPlanilha.forEach(colunas => {
                 if (!colunas[0]) return;
-                let dataLimpa = colunas[0].split(' ')[0]; // Pega apenas a data dd/mm/aaaa
+                let dataLimpa = colunas[0].split(' ')[0]; 
 
                 if (!mapeamentoDias[dataLimpa]) {
                     mapeamentoDias[dataLimpa] = `Dia ${contadorDias}`;
@@ -521,7 +519,6 @@
 
             let diasConcluidosSet = new Set();
 
-            // 2º Passo: Filtrar e somar os macros do dia selecionado
             linhasPlanilha.forEach(colunas => {
                 if (!colunas[0]) return;
                 
@@ -549,7 +546,6 @@
                 }
             });
 
-            // Atualização da barra macro de progresso dos 30 dias
             const totalDiasFeitos = diasConcluidosSet.size;
             const pctMacro = Math.min(Math.round((totalDiasFeitos / 30) * 100), 100);
             const diasRestantes = 30 - totalDiasFeitos;
@@ -563,7 +559,6 @@
                 document.getElementById('insight-falta').innerText = `🏆 Incrível! Você completou os 30 dias do objetivo!`;
             }
 
-            // Atualização dos cards e barras diárias na interface
             document.getElementById('nome-dia-titulo').innerText = diaSelecionado;
 
             const pctProt = Math.min(Math.round((dadosFiltrados.prot / metas.prot) * 100), 100);
@@ -660,7 +655,7 @@
                     const dadosEnvio = {
                         contents: [{
                             parts: [
-                                { text: "Analise esta imagem de comida. Estime as proteínas em gramas (apenas o número inteiro) e as calorias em kcal (apenas o número inteiro). Dê um nome curto para o prato. Retorne estritamente um JSON no seguinte formato, sem de forma alguma usar blocos de código ou markdown: {\"nome\": \"Nome\", \"prot\": 30, \"cal\": 450}" }
+                                { text: "Analise esta imagem de comida. Estime as proteínas em gramas (apenas o número inteiro) e as calorias em kcal (apenas o número inteiro). Dê um nome curto para o prato. Retorne estritamente um JSON no seguinte formato: {\"nome\": \"Nome\", \"prot\": 30, \"cal\": 450}" }
                             , { inlineData: { mimeType: mimeType, data: base64Data } }]
                         }]
                     };
