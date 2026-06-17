@@ -16,6 +16,7 @@
             --border-color: #f0e6ec;
             --accent-blue: #5bc0de;
             --accent-orange: #f0ad4e;
+            --accent-green: #28a745;
         }
         body {
             font-family: '-apple-system', BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -75,6 +76,50 @@
             font-weight: bold;
             margin-bottom: 15px;
         }
+        
+        /* SELETOR DE DIAS */
+        .nav-dias {
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+            scrollbar-width: none; /* Firefox */
+        }
+        .nav-dias::-webkit-scrollbar { display: none; } /* Chrome/Safari */
+        
+        .btn-dia {
+            background: #fff;
+            border: 1px solid var(--border-color);
+            padding: 8px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-support);
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+        }
+        .btn-dia.active {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+        }
+
+        /* BOTÃO DE METAS */
+        .btn-metas {
+            background: #fff0f5;
+            border: 1px dashed var(--primary);
+            color: var(--primary);
+            width: 100%;
+            padding: 8px;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 12px;
+            cursor: pointer;
+            margin-bottom: 15px;
+        }
+
         .calendar-grid {
             display: flex;
             flex-direction: column;
@@ -83,18 +128,10 @@
         }
         .day-card {
             background: var(--card-bg);
-            border: 1px solid var(--border-color);
+            border: 2px solid var(--primary);
             border-radius: 18px;
             padding: 15px;
             box-shadow: 0 4px 12px rgba(225, 213, 220, 0.2);
-        }
-        .day-card.active-day {
-            border: 2px solid var(--primary);
-        }
-        .day-card.empty {
-            background: var(--card-empty);
-            border-color: transparent;
-            opacity: 0.6;
         }
         .day-header {
             display: flex;
@@ -110,7 +147,6 @@
             color: var(--text);
         }
         .day-badge {
-            background: var(--primary);
             color: #fff;
             font-size: 10px;
             padding: 3px 8px;
@@ -223,7 +259,7 @@
             font-weight: bold;
             font-size: 13px;
             cursor: pointer;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -269,7 +305,7 @@
         @media print {
             body { background: #fff; padding: 0; }
             .container { box-shadow: none; max-width: 100%; width: 100%; padding: 0; }
-            .form-upload, .box-ia, .btn-pdf, .day-card.empty, .avatar-moderno, #status-nuvem { display: none !important; }
+            .form-upload, .box-ia, .btn-pdf, .avatar-moderno, #status-nuvem, .nav-dias, .btn-metas { display: none !important; }
             .day-card { page-break-inside: avoid; border: 1px solid #ccc !important; margin-bottom: 20px; }
         }
     </style>
@@ -293,30 +329,46 @@
             📄 Exportar Relatório Diário (PDF)
         </button>
 
+        <!-- NOVO SELETOR DE DIAS DA SEMANA -->
+        <div class="nav-dias" id="barra-dias">
+            <button class="btn-dia" id="btn-Domingo" onclick="mudarDiaExibido('Domingo')">Dom</button>
+            <button class="btn-dia" id="btn-Segunda" onclick="mudarDiaExibido('Segunda')">Seg</button>
+            <button class="btn-dia" id="btn-Terça" onclick="mudarDiaExibido('Terça')">Ter</button>
+            <button class="btn-dia" id="btn-Quarta" onclick="mudarDiaExibido('Quarta')">Qua</button>
+            <button class="btn-dia" id="btn-Quinta" onclick="mudarDiaExibido('Quinta')">Qui</button>
+            <button class="btn-dia" id="btn-Sexta" onclick="mudarDiaExibido('Sexta')">Sex</button>
+            <button class="btn-dia" id="btn-Sábado" onclick="mudarDiaExibido('Sábado')">Sáb</button>
+        </div>
+
+        <!-- NOVO BOTÃO DE EXIBIR OBJETIVO MÁXIMO -->
+        <button class="btn-metas" onclick="alert('🎯 Seus Objetivos de Bulking:\n\n• Proteína: 138g\n• Calorias: 2200 kcal\n• Água: 3.0 Litros (3000ml)')">
+            🎯 Ver Macros do Objetivo Total
+        </button>
+
         <div class="calendar-grid">
             
-            <!-- PAINEL DINÂMICO (Muda o título automaticamente conforme o dia) -->
-            <div class="day-card active-day" id="terca-card">
+            <!-- PAINEL DINÂMICO INTERATIVO -->
+            <div class="day-card" id="painel-principal">
                 <div class="day-header">
-                    <span class="day-title" id="nome-dia-titulo">Carregando Dia...</span>
-                    <span class="day-badge" style="background: #5cb85c;">HOJE</span>
+                    <span class="day-title" id="nome-dia-titulo">Carregando...</span>
+                    <span class="day-badge" id="tag-hoje" style="background: var(--accent-green); display: none;">HOJE</span>
                 </div>
                 <div class="macro-row">
-                    <div class="macro-info"><span>Proteína</span><span id="label-prot-terca">0g / 138g (0%)</span></div>
-                    <div class="bar-bg"><div id="bar-prot-terca" class="bar-fill fill-prot" style="width: 0%;"></div></div>
+                    <div class="macro-info"><span>Proteína</span><span id="label-prot">0g / 138g (0%)</span></div>
+                    <div class="bar-bg"><div id="bar-prot" class="bar-fill fill-prot" style="width: 0%;"></div></div>
                 </div>
                 <div class="macro-row">
-                    <div class="macro-info"><span>Calorias</span><span id="label-cal-terca">0 kcal / 2200 kcal (0%)</span></div>
-                    <div class="bar-bg"><div id="bar-cal-terca" class="bar-fill fill-cal" style="width: 0%;"></div></div>
+                    <div class="macro-info"><span>Calorias</span><span id="label-cal">0 kcal / 2200 kcal (0%)</span></div>
+                    <div class="bar-bg"><div id="bar-cal" class="bar-fill fill-cal" style="width: 0%;"></div></div>
                 </div>
                 <div class="macro-row">
-                    <div class="macro-info"><span>Água</span><span id="label-water-terca">0L / 3.0L (0%)</span></div>
-                    <div class="bar-bg"><div id="bar-water-terca" class="bar-fill fill-water" style="width: 0%;"></div></div>
+                    <div class="macro-info"><span>Água</span><span id="label-water">0L / 3.0L (0%)</span></div>
+                    <div class="bar-bg"><div id="bar-water" class="bar-fill fill-water" style="width: 0%;"></div></div>
                 </div>
-                <div class="meal-list" id="lista-refeicoes-terca" style="display:none;"></div>
+                <div class="meal-list" id="lista-refeicoes" style="display:none;"></div>
             </div>
 
-            <!-- NOVO BLOCO: ANÁLISE POR FOTO COM IA -->
+            <!-- ANÁLISE POR FOTO COM IA -->
             <div class="box-ia">
                 <h3>🤖 Analisar Prato com IA</h3>
                 <p style="font-size: 11px; color: #666; margin: 0 0 10px 0;">Tire uma foto ou envie uma imagem do seu prato</p>
@@ -325,9 +377,9 @@
                 <div id="resultado-ia"></div>
             </div>
 
-            <!-- FORMULÁRIO DE LANÇAMENTO MANUAL -->
+            <!-- FORMULÁRIO DE LANÇAMENTO (Lança sempre para o dia selecionado!) -->
             <div class="form-upload">
-                <h3 id="form-title">🍱 Registrar Alimento / Água</h3>
+                <h3 id="form-title">🍱 Registrar para <span id="dia-registro-label">Hoje</span></h3>
                 <div class="input-row">
                     <div class="input-group">
                         <label>Tipo de Registro</label>
@@ -364,31 +416,39 @@
         </div>
     </div>
 
-  <script>
-        // 1. LINK DO SEU APPS SCRIPT
+    <script>
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxQhGsF8_GJztqLiGldJJsEsvbga5yMJEabrj-_wZ6GHCfq2ojxAo_zgCtA311XYiPDtw/exec';
-                
-        // 2. ID DA SUA PLANILHA GOOGLE
         const SCRIPT_ID = '1IQ4lgm2ddNbx4lFYRcAsu9eugq6_LhrwuY7fCiNYVr4';
-
-        // 3. SUA CHAVE DA API DO GEMINI
         const GEMINI_API_KEY = 'SUA_CHAVE_GEMINI_AQUI';
 
-        // VARIÁVEIS GLOBAIS CORRIGIDAS NO TOPO
         const diasSemana = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
-        const diaAtual = diasSemana[new Date().getDay()];
+        const realDiaHoje = diasSemana[new Date().getDay()]; // O dia real de hoje no calendário
+        
+        let diaSelecionado = realDiaHoje; // Começa exibindo o dia de hoje
+        let bancoDadosCompleto = []; // Vai guardar todas as linhas vindas da planilha
 
-        let dadosTerca = { prot: 0, cal: 0, water: 0, refeicoes: [] };
         const metas = { prot: 138, cal: 2200, water: 3000 };
 
         window.onload = function() {
-            // Garante que o texto mude antes de buscar na nuvem
-            const tituloDia = document.getElementById('nome-dia-titulo');
-            if(tituloDia) {
-                tituloDia.innerText = `${diaAtual} (Hoje)`;
-            }
             carregarDadosNuvem();
         };
+
+        function mudarDiaExibido(dia) {
+            diaSelecionado = dia;
+            
+            // Atualiza os botões visuais
+            diasSemana.forEach(d => {
+                const btn = document.getElementById(`btn-${d}`);
+                if(btn) btn.classList.remove('active');
+            });
+            document.getElementById(`btn-${dia}`).classList.add('active');
+
+            // Atualiza o formulário de inserção para o dia selecionado
+            document.getElementById('dia-registro-label').innerText = dia === realDiaHoje ? "Hoje" : dia;
+
+            // Processa novamente os dados locais para o dia escolhido
+            processarEExibirDados();
+        }
 
         function alternarCampos() {
             const tipo = document.getElementById('tipo-registro').value;
@@ -399,7 +459,7 @@
 
         function adicionarItem() {
             const tipo = document.getElementById('tipo-registro').value;
-            let itemParaEnviar = { dia: diaAtual, tipo: tipo, nome: "-", prot: 0, cal: 0, water: 0 };
+            let itemParaEnviar = { dia: diaSelecionado, tipo: tipo, nome: "-", prot: 0, cal: 0, water: 0 };
 
             if (tipo === 'refeicao') {
                 const nome = document.getElementById('nome-refeicao').value || 'Refeição';
@@ -443,31 +503,10 @@
             .then(data => {
                 const jsonString = data.substring(47, data.length - 2);
                 const json = JSON.parse(jsonString);
-                const rows = json.table.rows;
+                bancoDadosCompleto = json.table.rows; // Guarda globalmente os dados da nuvem
 
-                dadosTerca = { prot: 0, cal: 0, water: 0, refeicoes: [] };
-
-                rows.forEach(row => {
-                    if (!row.c) return;
-                    const dia = row.c[1] ? row.c[1].v : '';
-                    const tipo = row.c[2] ? row.c[2].v : '';
-                    const nome = row.c[3] ? row.c[3].v : '-';
-                    const prot = row.c[4] ? parseInt(row.c[4].v) || 0 : 0;
-                    const cal = row.c[5] ? parseInt(row.c[5].v) || 0 : 0;
-                    const water = row.c[6] ? parseInt(row.c[6].v) || 0 : 0;
-
-                    if (dia === diaAtual) {
-                        if (tipo === "refeicao") {
-                            dadosTerca.prot += prot;
-                            dadosTerca.cal += cal;
-                            dadosTerca.refeicoes.push({ nome: nome, prot: prot, cal: cal });
-                        } else {
-                            dadosTerca.water += water;
-                        }
-                    }
-                });
-
-                atualizarPainelTerca();
+                // Ativa o botão correspondente ao dia selecionado
+                mudarDiaExibido(diaSelecionado);
                 document.getElementById('status-nuvem').innerText = "✅ Sincronizado com Google Sheets";
             })
             .catch(err => {
@@ -476,24 +515,53 @@
             });
         }
 
-        function atualizarPainelTerca() {
-            const pctProt = Math.min(Math.round((dadosTerca.prot / metas.prot) * 100), 100);
-            const pctCal = Math.min(Math.round((dadosTerca.cal / metas.cal) * 100), 100);
-            const pctWater = Math.min(Math.round((dadosTerca.water / metas.water) * 100), 100);
+        function processarEExibirDados() {
+            let dadosFiltrados = { prot: 0, cal: 0, water: 0, refeicoes: [] };
 
-            document.getElementById('label-prot-terca').innerText = `${dadosTerca.prot}g / ${metas.prot}g (${pctProt}%)`;
-            document.getElementById('label-cal-terca').innerText = `${dadosTerca.cal} kcal / ${metas.cal} kcal (${pctCal}%)`;
-            document.getElementById('label-water-terca').innerText = `${(dadosTerca.water / 1000).toFixed(1)}L / 3.0L (${pctWater}%)`;
+            bancoDadosCompleto.forEach(row => {
+                if (!row.c) return;
+                const dia = row.c[1] ? row.c[1].v : '';
+                const tipo = row.c[2] ? row.c[2].v : '';
+                const nome = row.c[3] ? row.c[3].v : '-';
+                const prot = row.c[4] ? parseInt(row.c[4].v) || 0 : 0;
+                const cal = row.c[5] ? parseInt(row.c[5].v) || 0 : 0;
+                const water = row.c[6] ? parseInt(row.c[6].v) || 0 : 0;
 
-            document.getElementById('bar-prot-terca').style.width = pctProt + '%';
-            document.getElementById('bar-cal-terca').style.width = pctCal + '%';
-            document.getElementById('bar-water-terca').style.width = pctWater + '%';
+                // Filtra as informações apenas para o dia selecionado atualmente na barra
+                if (dia === diaSelecionado) {
+                    if (tipo === "refeicao") {
+                        dadosFiltrados.prot += prot;
+                        dadosFiltrados.cal += cal;
+                        dadosFiltrados.refeicoes.push({ nome: nome, prot: prot, cal: cal });
+                    } else {
+                        dadosFiltrados.water += water;
+                    }
+                }
+            });
 
-            const lista = document.getElementById('lista-refeicoes-terca');
-            if (dadosTerca.refeicoes.length > 0) {
+            // Atualiza o Cabeçalho do Painel
+            document.getElementById('nome-dia-titulo').innerText = diaSelecionado;
+            document.getElementById('tag-hoje').style.display = diaSelecionado === realDiaHoje ? "block" : "none";
+
+            // Calcula porcentagens e atualiza barras
+            const pctProt = Math.min(Math.round((dadosFiltrados.prot / metas.prot) * 100), 100);
+            const pctCal = Math.min(Math.round((dadosFiltrados.cal / metas.cal) * 100), 100);
+            const pctWater = Math.min(Math.round((dadosFiltrados.water / metas.water) * 100), 100);
+
+            document.getElementById('label-prot').innerText = `${dadosFiltrados.prot}g / ${metas.prot}g (${pctProt}%)`;
+            document.getElementById('label-cal').innerText = `${dadosFiltrados.cal} kcal / ${metas.cal} kcal (${pctCal}%)`;
+            document.getElementById('label-water').innerText = `${(dadosFiltrados.water / 1000).toFixed(1)}L / 3.0L (${pctWater}%)`;
+
+            document.getElementById('bar-prot').style.width = pctProt + '%';
+            document.getElementById('bar-cal').style.width = pctCal + '%';
+            document.getElementById('bar-water').style.width = pctWater + '%';
+
+            // Lista as refeições individuais
+            const lista = document.getElementById('lista-refeicoes');
+            if (dadosFiltrados.refeicoes.length > 0) {
                 lista.style.display = 'block';
                 lista.innerHTML = '';
-                dadosTerca.refeicoes.forEach(item => {
+                dadosFiltrados.refeicoes.forEach(item => {
                     lista.innerHTML += `<div class="meal-item"><span><b>${item.nome}:</b> ${item.prot}g P | ${item.cal} kcal</span></div>`;
                 });
             } else {
@@ -501,6 +569,7 @@
             }
         }
 
+        // --- INTEGRAÇÃO INTELIGENTE COM GEMINI ---
         async function analisarPratoComIA() {
             const arquivoInput = document.getElementById('foto-refeicao');
             const resultadoDiv = document.getElementById('resultado-ia');
@@ -544,7 +613,8 @@
 
                     const jsonResposta = await resposta.json();
                     let textoResultado = jsonResposta.candidates[0].content.parts[0].text;
-                    textoResultado = textoResultado.replace(/```json/g, '').replace(/```/g, '').trim();
+                    textoResultado = textoResultado.replace(/```json/g, '').replace(/
+```/g, '').trim();
                     const dadosComida = JSON.parse(textoResultado);
 
                     resultadoDiv.innerHTML = `
@@ -552,7 +622,7 @@
                             <b>Prato:</b> ${dadosComida.nome}<br>
                             <b>Proteínas:</b> ${dadosComida.prot}g<br>
                             <b>Calorias:</b> ${dadosComida.cal} kcal<br>
-                            <button class="btn-submit" style="background:#28a745; margin-top:8px; padding:6px;" onclick="salvarRefeicaoIA('${dadosComida.nome}', ${dadosComida.prot}, ${dadosComida.cal})">✅ Confirmar e Salvar</button>
+                            <button class="btn-submit" style="background:#28a745; margin-top:8px; padding:6px;" onclick="salvarRefeicaoIA('${dadosComida.nome}', ${dadosComida.prot}, ${dadosComida.cal})">✅ Confirmar e Salvar em ${diaSelecionado}</button>
                         </div>
                     `;
                     btn.disabled = false;
@@ -566,7 +636,7 @@
 
         function salvarRefeicaoIA(nome, prot, cal) {
             document.getElementById('status-nuvem').innerText = "⏳ Salvando dados da IA no Google Sheets...";
-            let itemParaEnviar = { dia: diaAtual, tipo: "refeicao", nome: nome, prot: parseInt(prot), cal: parseInt(cal), water: 0 };
+            let itemParaEnviar = { dia: diaSelecionado, tipo: "refeicao", nome: nome, prot: parseInt(prot), cal: parseInt(cal), water: 0 };
 
             fetch(SCRIPT_URL, {
                 method: 'POST',
@@ -582,3 +652,5 @@
             });
         }
     </script>
+</body>
+</html>
