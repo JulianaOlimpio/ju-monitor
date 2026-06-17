@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ju Monitor - Calendário Bulking</title>
+    <title>Ju Monitor - Desafio 30 Dias Bulking</title>
     <style>
         :root {
             --bg-color: #ffffff;
@@ -17,6 +17,7 @@
             --accent-blue: #5bc0de;
             --accent-orange: #f0ad4e;
             --accent-green: #28a745;
+            --macro-gold: #ffd700;
         }
         body {
             font-family: '-apple-system', BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -76,22 +77,54 @@
             font-weight: bold;
             margin-bottom: 15px;
         }
+
+        /* PAINEL MACRO - DESAFIO 30 DIAS */
+        .panel-macro-30 {
+            background: linear-gradient(135deg, #fff5f8 0%, #fff0f5 100%);
+            border: 2px dashed var(--primary);
+            border-radius: 18px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 10px rgba(255, 102, 163, 0.05);
+        }
+        .macro-title {
+            font-weight: bold;
+            font-size: 14px;
+            color: var(--text);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .bar-macro-bg {
+            background: #eeeaf0;
+            border-radius: 8px;
+            height: 12px;
+            overflow: hidden;
+        }
+        .bar-macro-fill {
+            height: 100%;
+            border-radius: 8px;
+            width: 0%;
+            background: linear-gradient(90deg, var(--primary-light) 0%, var(--primary) 100%);
+            transition: width 0.5s ease;
+        }
         
-        /* SELETOR DE DIAS */
+        /* SELETOR DE DIAS (1 A 30) */
         .nav-dias {
             display: flex;
             gap: 6px;
             overflow-x: auto;
             padding-bottom: 10px;
             margin-bottom: 15px;
-            scrollbar-width: none; /* Firefox */
+            scrollbar-width: none;
         }
-        .nav-dias::-webkit-scrollbar { display: none; } /* Chrome/Safari */
+        .nav-dias::-webkit-scrollbar { display: none; }
         
         .btn-dia {
             background: #fff;
             border: 1px solid var(--border-color);
-            padding: 8px 12px;
+            padding: 8px 14px;
             border-radius: 12px;
             font-size: 12px;
             font-weight: 600;
@@ -104,20 +137,6 @@
             background: var(--primary);
             color: #fff;
             border-color: var(--primary);
-        }
-
-        /* BOTÃO DE METAS */
-        .btn-metas {
-            background: #fff0f5;
-            border: 1px dashed var(--primary);
-            color: var(--primary);
-            width: 100%;
-            padding: 8px;
-            border-radius: 12px;
-            font-weight: bold;
-            font-size: 12px;
-            cursor: pointer;
-            margin-bottom: 15px;
         }
 
         .calendar-grid {
@@ -145,13 +164,6 @@
             font-weight: bold;
             font-size: 15px;
             color: var(--text);
-        }
-        .day-badge {
-            color: #fff;
-            font-size: 10px;
-            padding: 3px 8px;
-            border-radius: 10px;
-            font-weight: bold;
         }
         .macro-row {
             margin-bottom: 8px;
@@ -202,7 +214,6 @@
             border: 1px solid var(--primary-light);
             border-radius: 18px;
             padding: 15px;
-            margin-top: -5px;
             margin-bottom: 20px;
             box-shadow: 0 6px 15px rgba(255, 102, 163, 0.05);
         }
@@ -279,7 +290,6 @@
             border-radius: 18px;
             margin-bottom: 20px;
             text-align: center;
-            box-shadow: 0 6px 15px rgba(255, 102, 163, 0.05);
         }
         .box-ia h3 {
             margin-top: 0;
@@ -297,16 +307,11 @@
             font-weight: bold;
             margin-top: 10px;
             width: 100%;
-            font-size: 13px;
         }
-        .btn-ia:disabled { background-color: #ccc; }
         #resultado-ia { margin-top: 10px; font-size: 12px; color: #333; text-align: left; }
 
         @media print {
-            body { background: #fff; padding: 0; }
-            .container { box-shadow: none; max-width: 100%; width: 100%; padding: 0; }
-            .form-upload, .box-ia, .btn-pdf, .avatar-moderno, #status-nuvem, .nav-dias, .btn-metas { display: none !important; }
-            .day-card { page-break-inside: avoid; border: 1px solid #ccc !important; margin-bottom: 20px; }
+            .form-upload, .box-ia, .btn-pdf, .avatar-moderno, #status-nuvem, .nav-dias, .panel-macro-30 { display: none !important; }
         }
     </style>
 </head>
@@ -321,65 +326,64 @@
             </div>
             <h1>Ju Monitor</h1>
         </header>
-        <div class="subtitle">Semana 01: Bulking 🌸</div>
+        <div class="subtitle">Desafio 30 Dias: Bulking 🌸</div>
         
         <div id="status-nuvem">🔄 Sincronizando com o Google Sheets...</div>
 
-        <button class="btn-pdf" onclick="window.print()">
-            📄 Exportar Relatório Diário (PDF)
-        </button>
-
-        <!-- NOVO SELETOR DE DIAS DA SEMANA -->
-        <div class="nav-dias" id="barra-dias">
-            <button class="btn-dia" id="btn-Domingo" onclick="mudarDiaExibido('Domingo')">Dom</button>
-            <button class="btn-dia" id="btn-Segunda" onclick="mudarDiaExibido('Segunda')">Seg</button>
-            <button class="btn-dia" id="btn-Terça" onclick="mudarDiaExibido('Terça')">Ter</button>
-            <button class="btn-dia" id="btn-Quarta" onclick="mudarDiaExibido('Quarta')">Qua</button>
-            <button class="btn-dia" id="btn-Quinta" onclick="mudarDiaExibido('Quinta')">Qui</button>
-            <button class="btn-dia" id="btn-Sexta" onclick="mudarDiaExibido('Sexta')">Sex</button>
-            <button class="btn-dia" id="btn-Sábado" onclick="mudarDiaExibido('Sábado')">Sáb</button>
+        <!-- 🎯 NOVA VISÃO MACRO: PROGRESSO DOS 30 DIAS -->
+        <div class="panel-macro-30">
+            <div class="macro-title">
+                <span>🏆 Progresso Geral do Objetivo</span>
+                <span id="texto-progresso-macro">0 / 30 Dias (0%)</span>
+            </div>
+            <div class="bar-macro-bg">
+                <div id="bar-macro-progresso" class="bar-macro-fill"></div>
+            </div>
+            <p id="insight-falta" style="font-size: 11px; margin: 8px 0 0 0; color: var(--text-support); font-weight: 500;"></p>
         </div>
 
-        <!-- NOVO BOTÃO DE EXIBIR OBJETIVO MÁXIMO -->
-        <button class="btn-metas" onclick="alert('🎯 Seus Objetivos de Bulking:\n\n• Proteína: 138g\n• Calorias: 2200 kcal\n• Água: 3.0 Litros (3000ml)')">
-            🎯 Ver Macros do Objetivo Total
+        <button class="btn-pdf" onclick="window.print()">
+            📄 Exportar Relatório (PDF)
         </button>
+
+        <!-- SELETOR DINÂMICO DE DIA (1 a 30) -->
+        <div class="nav-dias" id="barra-dias">
+            <!-- Gerado via JavaScript para economizar espaço de código -->
+        </div>
 
         <div class="calendar-grid">
             
-            <!-- PAINEL DINÂMICO INTERATIVO -->
-            <div class="day-card" id="painel-principal">
+            <!-- PAINEL DO DIA SELECIONADO -->
+            <div class="day-card">
                 <div class="day-header">
-                    <span class="day-title" id="nome-dia-titulo">Carregando...</span>
-                    <span class="day-badge" id="tag-hoje" style="background: var(--accent-green); display: none;">HOJE</span>
+                    <span class="day-title" id="nome-dia-titulo">Selecione um dia...</span>
                 </div>
                 <div class="macro-row">
                     <div class="macro-info"><span>Proteína</span><span id="label-prot">0g / 138g (0%)</span></div>
-                    <div class="bar-bg"><div id="bar-prot" class="bar-fill fill-prot" style="width: 0%;"></div></div>
+                    <div class="bar-bg"><div id="bar-prot" class="bar-fill fill-prot"></div></div>
                 </div>
                 <div class="macro-row">
                     <div class="macro-info"><span>Calorias</span><span id="label-cal">0 kcal / 2200 kcal (0%)</span></div>
-                    <div class="bar-bg"><div id="bar-cal" class="bar-fill fill-cal" style="width: 0%;"></div></div>
+                    <div class="bar-bg"><div id="bar-cal" class="bar-fill fill-cal"></div></div>
                 </div>
                 <div class="macro-row">
                     <div class="macro-info"><span>Água</span><span id="label-water">0L / 3.0L (0%)</span></div>
-                    <div class="bar-bg"><div id="bar-water" class="bar-fill fill-water" style="width: 0%;"></div></div>
+                    <div class="bar-bg"><div id="bar-water" class="bar-fill fill-water"></div></div>
                 </div>
                 <div class="meal-list" id="lista-refeicoes" style="display:none;"></div>
             </div>
 
-            <!-- ANÁLISE POR FOTO COM IA -->
+            <!-- ANALISADOR COM IA -->
             <div class="box-ia">
                 <h3>🤖 Analisar Prato com IA</h3>
-                <p style="font-size: 11px; color: #666; margin: 0 0 10px 0;">Tire uma foto ou envie uma imagem do seu prato</p>
                 <input type="file" id="foto-refeicao" accept="image/*" style="font-size: 12px; width: 100%;">
                 <button class="btn-ia" id="btn-analisar" onclick="analisarPratoComIA()">🔍 Analisar com Gemini IA</button>
                 <div id="resultado-ia"></div>
             </div>
 
-            <!-- FORMULÁRIO DE LANÇAMENTO (Lança sempre para o dia selecionado!) -->
+            <!-- FORMULÁRIO DE LANÇAMENTO -->
             <div class="form-upload">
-                <h3 id="form-title">🍱 Registrar para <span id="dia-registro-label">Hoje</span></h3>
+                <h3>🍱 Registrar para o <span id="dia-registro-label">Dia 1</span></h3>
                 <div class="input-row">
                     <div class="input-group">
                         <label>Tipo de Registro</label>
@@ -390,7 +394,7 @@
                     </div>
                     <div class="input-group" id="grupo-nome">
                         <label>Nome da Refeição</label>
-                        <input type="text" id="nome-refeicao" placeholder="Ex: Almoço">
+                        <input type="text" id="nome-refeicao" placeholder="Ex: Café da manhã">
                     </div>
                 </div>
                 <div id="campos-refeicao">
@@ -411,7 +415,7 @@
                         <input type="number" id="input-agua" placeholder="Ex: 500">
                     </div>
                 </div>
-                <button class="btn-submit" id="btn-salvar" onclick="adicionarItem()">Lançar na Nuvem</button>
+                <button class="btn-submit" onclick="adicionarItem()">Lançar na Nuvem</button>
             </div>
         </div>
     </div>
@@ -421,32 +425,30 @@
         const SCRIPT_ID = '1IQ4lgm2ddNbx4lFYRcAsu9eugq6_LhrwuY7fCiNYVr4';
         const GEMINI_API_KEY = 'SUA_CHAVE_GEMINI_AQUI';
 
-        const diasSemana = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
-        const realDiaHoje = diasSemana[new Date().getDay()]; // O dia real de hoje no calendário
-        
-        let diaSelecionado = realDiaHoje; // Começa exibindo o dia de hoje
-        let bancoDadosCompleto = []; // Vai guardar todas as linhas vindas da planilha
-
+        let diaSelecionado = "Dia 1"; 
+        let bancoDadosCompleto = []; 
         const metas = { prot: 138, cal: 2200, water: 3000 };
 
+        // Inicialização rápida: Constrói a barra de 1 a 30 botões
         window.onload = function() {
+            const barra = document.getElementById('barra-dias');
+            barra.innerHTML = '';
+            for(let i = 1; i <= 30; i++) {
+                barra.innerHTML += `<button class="btn-dia" id="btn-Dia-${i}" onclick="mudarDiaExibido('Dia ${i}')">Dia ${i}</button>`;
+            }
             carregarDadosNuvem();
         };
 
         function mudarDiaExibido(dia) {
             diaSelecionado = dia;
-            
-            // Atualiza os botões visuais
-            diasSemana.forEach(d => {
-                const btn = document.getElementById(`btn-${d}`);
+            for(let i = 1; i <= 30; i++) {
+                const btn = document.getElementById(`btn-Dia-${i}`);
                 if(btn) btn.classList.remove('active');
-            });
-            document.getElementById(`btn-${dia}`).classList.add('active');
+            }
+            const btnAtivo = document.getElementById(`btn-${dia}`);
+            if(btnAtivo) btnAtivo.classList.add('active');
 
-            // Atualiza o formulário de inserção para o dia selecionado
-            document.getElementById('dia-registro-label').innerText = dia === realDiaHoje ? "Hoje" : dia;
-
-            // Processa novamente os dados locais para o dia escolhido
+            document.getElementById('dia-registro-label').innerText = dia;
             processarEExibirDados();
         }
 
@@ -455,6 +457,97 @@
             document.getElementById('campos-refeicao').style.display = tipo === 'refeicao' ? 'block' : 'none';
             document.getElementById('grupo-nome').style.display = tipo === 'refeicao' ? 'flex' : 'none';
             document.getElementById('campos-agua').style.display = tipo === 'agua' ? 'block' : 'none';
+        }
+
+        function carregarDadosNuvem() {
+            const urlLeitura = `https://docs.google.com/spreadsheets/d/${SCRIPT_ID}/gviz/tq?tqx=out:json`;
+
+            fetch(urlLeitura)
+            .then(res => res.text())
+            .then(data => {
+                const jsonString = data.substring(47, data.length - 2);
+                const json = JSON.parse(jsonString);
+                bancoDadosCompleto = json.table.rows; 
+
+                mudarDiaExibido(diaSelecionado);
+                document.getElementById('status-nuvem').innerText = "✅ Sincronizado com Google Sheets";
+            })
+            .catch(err => {
+                document.getElementById('status-nuvem').innerText = "❌ Erro ao carregar dados salvos.";
+                console.error(err);
+            });
+        }
+
+        function processarEExibirDados() {
+            let dadosFiltrados = { prot: 0, cal: 0, water: 0, refeicoes: [] };
+            let diasConcluidosSet = new Set(); // Guarda os dias únicos que têm registros relevantes
+
+            bancoDadosCompleto.forEach(row => {
+                if (!row.c) return;
+                let dia = row.c[1] ? row.c[1].v : '';
+                const tipo = row.c[2] ? row.c[2].v : '';
+                const nome = row.c[3] ? row.c[3].v : '-';
+                const prot = row.c[4] ? parseInt(row.c[4].v) || 0 : 0;
+                const cal = row.c[5] ? parseInt(row.c[5].v) || 0 : 0;
+                const water = row.c[6] ? parseInt(row.c[6].v) || 0 : 0;
+
+                // Padroniza o formato caso venha apenas número da planilha (ex: "1" vira "Dia 1")
+                if(!isNaN(dia) && dia !== '') { dia = `Dia ${dia}`; }
+
+                if (dia && (prot > 0 || cal > 0 || water > 0)) {
+                    diasConcluidosSet.add(dia);
+                }
+
+                if (dia === diaSelecionado) {
+                    if (tipo === "refeicao") {
+                        dadosFiltrados.prot += prot;
+                        dadosFiltrados.cal += cal;
+                        dadosFiltrados.refeicoes.push({ nome: nome, prot: prot, cal: cal });
+                    } else {
+                        dadosFiltrados.water += water;
+                    }
+                }
+            });
+
+            // --- ATUALIZAÇÃO DA VISÃO MACRO 30 DIAS ---
+            const totalDiasFeitos = diasConcluidosSet.size;
+            const pctMacro = Math.min(Math.round((totalDiasFeitos / 30) * 100), 100);
+            const diasRestantes = 30 - totalDiasFeitos;
+
+            document.getElementById('texto-progresso-macro').innerText = `${totalDiasFeitos} / 30 Dias (${pctMacro}%)`;
+            document.getElementById('bar-macro-progresso').style.width = pctMacro + '%';
+            
+            if(diasRestantes > 0) {
+                document.getElementById('insight-falta').innerText = `🎯 Faltam apenas ${diasRestantes} dias para você bater sua meta de Bulking!`;
+            } else {
+                document.getElementById('insight-falta').innerText = `🏆 Parabéns! Desafio de 30 Dias concluído com sucesso!`;
+            }
+
+            // Atualiza Painel Diário
+            document.getElementById('nome-dia-titulo').innerText = diaSelecionado;
+
+            const pctProt = Math.min(Math.round((dadosFiltrados.prot / metas.prot) * 100), 100);
+            const pctCal = Math.min(Math.round((dadosFiltrados.cal / metas.cal) * 100), 100);
+            const pctWater = Math.min(Math.round((dadosFiltrados.water / metas.water) * 100), 100);
+
+            document.getElementById('label-prot').innerText = `${dadosFiltrados.prot}g / ${metas.prot}g (${pctProt}%)`;
+            document.getElementById('label-cal').innerText = `${dadosFiltrados.cal} kcal / ${metas.cal} kcal (${pctCal}%)`;
+            document.getElementById('label-water').innerText = `${(dadosFiltrados.water / 1000).toFixed(1)}L / 3.0L (${pctWater}%)`;
+
+            document.getElementById('bar-prot').style.width = pctProt + '%';
+            document.getElementById('bar-cal').style.width = pctCal + '%';
+            document.getElementById('bar-water').style.width = pctWater + '%';
+
+            const lista = document.getElementById('lista-refeicoes');
+            if (dadosFiltrados.refeicoes.length > 0) {
+                lista.style.display = 'block';
+                lista.innerHTML = '';
+                dadosFiltrados.refeicoes.forEach(item => {
+                    lista.innerHTML += `<div class="meal-item"><span><b>${item.nome}:</b> ${item.prot}g P | ${item.cal} kcal</span></div>`;
+                });
+            } else {
+                lista.style.display = 'none';
+            }
         }
 
         function adicionarItem() {
@@ -495,81 +588,6 @@
             });
         }
 
-        function carregarDadosNuvem() {
-            const urlLeitura = `https://docs.google.com/spreadsheets/d/${SCRIPT_ID}/gviz/tq?tqx=out:json`;
-
-            fetch(urlLeitura)
-            .then(res => res.text())
-            .then(data => {
-                const jsonString = data.substring(47, data.length - 2);
-                const json = JSON.parse(jsonString);
-                bancoDadosCompleto = json.table.rows; // Guarda globalmente os dados da nuvem
-
-                // Ativa o botão correspondente ao dia selecionado
-                mudarDiaExibido(diaSelecionado);
-                document.getElementById('status-nuvem').innerText = "✅ Sincronizado com Google Sheets";
-            })
-            .catch(err => {
-                document.getElementById('status-nuvem').innerText = "❌ Erro ao carregar dados salvos.";
-                console.error(err);
-            });
-        }
-
-        function processarEExibirDados() {
-            let dadosFiltrados = { prot: 0, cal: 0, water: 0, refeicoes: [] };
-
-            bancoDadosCompleto.forEach(row => {
-                if (!row.c) return;
-                const dia = row.c[1] ? row.c[1].v : '';
-                const tipo = row.c[2] ? row.c[2].v : '';
-                const nome = row.c[3] ? row.c[3].v : '-';
-                const prot = row.c[4] ? parseInt(row.c[4].v) || 0 : 0;
-                const cal = row.c[5] ? parseInt(row.c[5].v) || 0 : 0;
-                const water = row.c[6] ? parseInt(row.c[6].v) || 0 : 0;
-
-                // Filtra as informações apenas para o dia selecionado atualmente na barra
-                if (dia === diaSelecionado) {
-                    if (tipo === "refeicao") {
-                        dadosFiltrados.prot += prot;
-                        dadosFiltrados.cal += cal;
-                        dadosFiltrados.refeicoes.push({ nome: nome, prot: prot, cal: cal });
-                    } else {
-                        dadosFiltrados.water += water;
-                    }
-                }
-            });
-
-            // Atualiza o Cabeçalho do Painel
-            document.getElementById('nome-dia-titulo').innerText = diaSelecionado;
-            document.getElementById('tag-hoje').style.display = diaSelecionado === realDiaHoje ? "block" : "none";
-
-            // Calcula porcentagens e atualiza barras
-            const pctProt = Math.min(Math.round((dadosFiltrados.prot / metas.prot) * 100), 100);
-            const pctCal = Math.min(Math.round((dadosFiltrados.cal / metas.cal) * 100), 100);
-            const pctWater = Math.min(Math.round((dadosFiltrados.water / metas.water) * 100), 100);
-
-            document.getElementById('label-prot').innerText = `${dadosFiltrados.prot}g / ${metas.prot}g (${pctProt}%)`;
-            document.getElementById('label-cal').innerText = `${dadosFiltrados.cal} kcal / ${metas.cal} kcal (${pctCal}%)`;
-            document.getElementById('label-water').innerText = `${(dadosFiltrados.water / 1000).toFixed(1)}L / 3.0L (${pctWater}%)`;
-
-            document.getElementById('bar-prot').style.width = pctProt + '%';
-            document.getElementById('bar-cal').style.width = pctCal + '%';
-            document.getElementById('bar-water').style.width = pctWater + '%';
-
-            // Lista as refeições individuais
-            const lista = document.getElementById('lista-refeicoes');
-            if (dadosFiltrados.refeicoes.length > 0) {
-                lista.style.display = 'block';
-                lista.innerHTML = '';
-                dadosFiltrados.refeicoes.forEach(item => {
-                    lista.innerHTML += `<div class="meal-item"><span><b>${item.nome}:</b> ${item.prot}g P | ${item.cal} kcal</span></div>`;
-                });
-            } else {
-                lista.style.display = 'none';
-            }
-        }
-
-        // --- INTEGRAÇÃO INTELIGENTE COM GEMINI ---
         async function analisarPratoComIA() {
             const arquivoInput = document.getElementById('foto-refeicao');
             const resultadoDiv = document.getElementById('resultado-ia');
@@ -580,7 +598,7 @@
                 return;
             }
             if (GEMINI_API_KEY === 'SUA_CHAVE_GEMINI_AQUI') {
-                alert('Você precisa colocar sua chave API do Gemini no código!');
+                alert('Coloque sua chave API do Gemini!');
                 return;
             }
 
@@ -599,9 +617,8 @@
                     const dadosEnvio = {
                         contents: [{
                             parts: [
-                                { text: "Analise esta imagem de comida. Estime as proteínas em gramas (apenas o número inteiro) e as calorias em kcal (apenas o número inteiro). Dê um nome curto para o prato. Retorne estritamente um JSON no seguinte formato, sem formatação markdown: {\"nome\": \"Nome do Prato\", \"prot\": 30, \"cal\": 450}" },
-                                { inlineData: { mimeType: mimeType, data: base64Data } }
-                            ]
+                                { text: "Analise esta imagem de comida. Estime as proteínas em gramas (apenas o número inteiro) e as calorias em kcal (apenas o número inteiro). Dê um nome curto para o prato. Retorne estritamente um JSON no seguinte formato, sem de forma alguma usar blocos de código ou markdown: {\"nome\": \"Nome\", \"prot\": 30, \"cal\": 450}" }
+                            , { inlineData: { mimeType: mimeType, data: base64Data } }]
                         }]
                     };
 
@@ -622,7 +639,7 @@
                             <b>Prato:</b> ${dadosComida.nome}<br>
                             <b>Proteínas:</b> ${dadosComida.prot}g<br>
                             <b>Calorias:</b> ${dadosComida.cal} kcal<br>
-                            <button class="btn-submit" style="background:#28a745; margin-top:8px; padding:6px;" onclick="salvarRefeicaoIA('${dadosComida.nome}', ${dadosComida.prot}, ${dadosComida.cal})">✅ Confirmar e Salvar em ${diaSelecionado}</button>
+                            <button class="btn-submit" style="background:#28a745; margin-top:8px; padding:6px;" onclick="salvarRefeicaoIA('${dadosComida.nome}', ${dadosComida.prot}, ${dadosComida.cal})">✅ Confirmar e Salvar no ${diaSelecionado}</button>
                         </div>
                     `;
                     btn.disabled = false;
