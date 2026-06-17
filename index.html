@@ -376,9 +376,13 @@ const SCRIPT_ID = '1IQ4lgm2ddNbx4lFYRcAsu9eugq6_LhrwuY7fCiNYVr4';
             document.getElementById('campos-agua').style.display = tipo === 'agua' ? 'block' : 'none';
         }
 
-        function adicionarItem() {
-            const tipo = document.getElementById('tipo-registro').value;
-            let itemParaEnviar = { dia: "Terça", tipo: tipo, nome: "-", prot: 0, cal: 0, water: 0 };
+       // Descobre o dia da semana atual em português (ex: "Terça-feira", "Quarta-feira")
+const diasSemana = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+const diaAtualCompleto = diasSemana[new Date().getDay()]; 
+// Se na sua planilha usa apenas "Terça", "Quarta" (sem o "-feira"), mantemos assim:
+const diaParaEnviar = diaAtualCompleto.replace("-feira", "");
+
+let itemParaEnviar = { dia: diaParaEnviar, tipo: tipo, nome: "-", prot: 0, cal: 0, water: 0 };
 
             if (tipo === 'refeicao') {
                 const nome = document.getElementById('nome-refeicao').value || 'Refeição';
