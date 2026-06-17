@@ -363,7 +363,6 @@
         <div class="nav-dias-wrapper">
             <div class="nav-dias-label">📅 Histórico do Desafio:</div>
             <div class="nav-dias" id="barra-dias">
-                <!-- Botões gerados de 1 a 30 -->
                 <script>
                     for(let i=1; i<=30; i++) {
                         document.write(`<button class="btn-dia ${i===1?'active':''}" id="btn-Dia-${i}" onclick="mudarDiaExibido('Dia ${i}')">Dia ${i}</button>`);
@@ -447,7 +446,7 @@
         const GEMINI_API_KEY = 'SUA_CHAVE_GEMINI_AQUI';
 
         let diaSelecionado = "Dia 1"; 
-        let bancoDadosCompleto = []; 
+        let linhasPlanilha = []; 
         const metas = { prot: 138, cal: 2200, water: 3000 };
 
         window.onload = function() {
@@ -475,15 +474,13 @@
         }
 
         function carregarDadosNuvem() {
-            const urlLeitura = `https://docs.google.com/spreadsheets/d/${SCRIPT_ID}/gviz/tq?tqx=out:json`;
+            // Nova estratégia: leitura estável via CSV publicado
+            const urlCSV = `https://docs.google.com/spreadsheets/d/${SCRIPT_ID}/pub?output=csv`;
 
-            fetch(urlLeitura)
+            fetch(urlCSV)
             .then(res => res.text())
-            .then(data => {
-                const jsonString = data.substring(47, data.length - 2);
-                const json = JSON.parse(jsonString);
-                bancoDadosCompleto = json.table.rows; 
-
+            .then(csvTexto => {
+                linhasPlanilha = parseCSV(csvTexto);
                 mudarDiaExibido(diaSelecionado);
                 document.getElementById('status-nuvem').innerText = "✅ Sincronizado com Google Sheets";
             })
@@ -493,19 +490,28 @@
             });
         }
 
+        // Conversor seguro de CSV para Array
+        function parseCSV(text) {
+            let lines = text.split(/\r\n|\n/);
+            let result = [];
+            for (let i = 1; i < lines.length; i++) {
+                if (!lines[i]) continue;
+                let cells = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                result.push(cells.map(c => c.replace(/^"|"$/g, '').trim()));
+            }
+            return result;
+        }
+
         function processarEExibirDados() {
             let dadosFiltrados = { prot: 0, cal: 0, water: 0, refeicoes: [] };
             
-            // Mapeia automaticamente as datas reais para "Dia 1", "Dia 2", etc.
             let mapeamentoDias = {};
             let contadorDias = 1;
 
-            bancoDadosCompleto.forEach(row => {
-                if (!row.c || !row.c[0]) return;
-                
-                // Extrai a data limpa (ex: "16/06/2026") ignorando o horário
-                let dataCompleta = row.c[0].f || row.c[0].v;
-                let dataLimpa = dataCompleta.split(' ')[0]; 
+            // 1º Passo: Mapear as datas únicas reais presentes na planilha para sequenciar Dia 1, Dia 2...
+            linhasPlanilha.forEach(colunas => {
+                if (!colunas[0]) return;
+                let dataLimpa = colunas[0].split(' ')[0]; // Pega apenas a data dd/mm/aaaa
 
                 if (!mapeamentoDias[dataLimpa]) {
                     mapeamentoDias[dataLimpa] = `Dia ${contadorDias}`;
@@ -515,35 +521,35 @@
 
             let diasConcluidosSet = new Set();
 
-            bancoDadosCompleto.forEach(row => {
-                if (!row.c || !row.c[0]) return;
+            // 2º Passo: Filtrar e somar os macros do dia selecionado
+            linhasPlanilha.forEach(colunas => {
+                if (!colunas[0]) return;
                 
-                let dataCompleta = row.c[0].f || row.c[0].v;
-                let dataLimpa = dataCompleta.split(' ')[0];
-                let diaDoCard = mapeamentoDias[dataLimpa]; // Converte a data real para "Dia X"
+                let dataLimpa = colunas[0].split(' ')[0];
+                let diaDoCard = mapeamentoDias[dataLimpa];
 
-                const tipo = row.c[2] ? row.c[2].v : '';
-                const nome = row.c[3] ? row.c[3].v : '-';
-                const prot = row.c[4] ? parseInt(row.c[4].v) || 0 : 0;
-                const cal = row.c[5] ? parseInt(row.c[5].v) || 0 : 0;
-                const water = row.c[6] ? parseInt(row.c[6].v) || 0 : 0;
+                const tipo = colunas[2] || '';
+                const nome = colunas[3] || '-';
+                const prot = parseInt(colunas[4]) || 0;
+                const cal = parseInt(colunas[5]) || 0;
+                const water = parseInt(colunas[6]) || 0;
 
                 if (prot > 0 || cal > 0 || water > 0) {
                     diasConcluidosSet.add(diaDoCard);
                 }
 
                 if (diaDoCard === diaSelecionado) {
-                    if (tipo === "refeicao") {
+                    if (tipo.toLowerCase() === "refeicao") {
                         dadosFiltrados.prot += prot;
                         dadosFiltrados.cal += cal;
                         dadosFiltrados.refeicoes.push({ nome: nome, prot: prot, cal: cal });
-                    } else {
+                    } else if (tipo.toLowerCase() === "agua") {
                         dadosFiltrados.water += water;
                     }
                 }
             });
 
-            // --- ATUALIZAÇÃO DA VISÃO MACRO 30 DIAS ---
+            // Atualização da barra macro de progresso dos 30 dias
             const totalDiasFeitos = diasConcluidosSet.size;
             const pctMacro = Math.min(Math.round((totalDiasFeitos / 30) * 100), 100);
             const diasRestantes = 30 - totalDiasFeitos;
@@ -557,7 +563,7 @@
                 document.getElementById('insight-falta').innerText = `🏆 Incrível! Você completou os 30 dias do objetivo!`;
             }
 
-            // Atualiza Painel Diário
+            // Atualização dos cards e barras diárias na interface
             document.getElementById('nome-dia-titulo').innerText = diaSelecionado;
 
             const pctProt = Math.min(Math.round((dadosFiltrados.prot / metas.prot) * 100), 100);
@@ -586,8 +592,6 @@
 
         function adicionarItem() {
             const tipo = document.getElementById('tipo-registro').value;
-            
-            // Obtém o nome do dia da semana atual para salvar coerente com o seu histórico
             const diasSemana = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
             const hojeNome = diasSemana[new Date().getDay()];
 
